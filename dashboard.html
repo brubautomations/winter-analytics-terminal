@@ -1886,8 +1886,9 @@
                         <div class="time-filters"><span>1D</span><span>1W</span><span
                                 class="active">1M</span><span>ALL</span></div>
                     </div>
-                    <div class="port-val" style="color:var(--profit-green);">+₱ 18,400.00</div>
-                    <div style="font-size:0.8rem;color:var(--text-muted);">Past Month</div>
+                    <div class="port-val" style="color:var(--profit-green);">><span id="portfolio-pnl">+₱ 0.00</span>
+                    </div>
+                    <div style="font-size:0.8rem;color:var(--text-muted);" id="portfolio-pnl-label">Loading...</div>
                     <div class="chart-container">
                         <svg viewBox="0 0 100 30" preserveAspectRatio="none" style="width:100%;height:100%;">
                             <path d="M0,25 L10,22 L20,26 L30,15 L40,12 L50,18 L60,8 L70,10 L80,4 L90,6 L100,2"
@@ -1922,8 +1923,8 @@
                     <div class="stat-label">Win Rate</div>
                     <div class="stat-val" id="stat-winrate" style="color:var(--ice-blue-accent);">--%</div>
                 </div>
-                <div class="brag-box"><button class="btn-brag" onclick="sharePortfolio()" id="share-btn">📤 Share My
-                        Alpha</button></div>
+                <div class="brag-box"><button class="btn-brag" onclick="sharePortfolio()" id="share-btn">📲 Share on
+                        Social</button></div>
 
                 <!-- BET HISTORY -->
                 <div style="margin-top:24px;">
@@ -2200,40 +2201,83 @@
             const feed = document.getElementById('bet-history-feed');
             if (!feed) return;
             try {
-                const url = `https://api.airtable.com/v0/${BETTING_BASE_ID}/Bets?filterByFormula=${encodeURIComponent('{User}="' + USER_ID + '"')}&sort%5B0%5D%5Bfield%5D=Created+time&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=20`;
+                const formula = encodeURIComponent('{User}="' + USER_ID + '"');
+                const url = `https://api.airtable.com/v0/${BETTING_BASE_ID}/Bets?filterByFormula=${formula}&maxRecords=100`;
                 const res = await fetch(url, { headers: { Authorization: `Bearer ${BETTING_TOKEN}` } });
                 const json = await res.json();
                 if (!json.records || json.records.length === 0) {
                     feed.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;">No bets yet. Place your first bet!</p>';
+                    // Reset stats
+                    ['stat-total-bets', 'stat-wins', 'stat-losses', 'stat-winrate'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.innerText = id === 'stat-winrate' ? '--%' : '--';
+                    });
                     return;
                 }
-                feed.innerHTML = json.records.map(r => {
+
+                // Calculate real stats
+                const records = json.records;
+                const totalBets = records.length;
+                const wins = records.filter(r => r.fields.Status === 'Won').length;
+                const losses = records.filter(r => r.fields.Status === 'Lost').length;
+                const pending = records.filter(r => !r.fields.Status || r.fields.Status === 'Pending').length;
+                const winRate = (wins + losses) > 0 ? Math.round(wins / (wins + losses) * 100) : 0;
+
+                // Calculate real P&L
+                const totalWon = records.filter(r => r.fields.Status === 'Won').reduce((s, r) => s + (r.fields.Payout || 0), 0);
+                const totalLost = records.filter(r => r.fields.Status === 'Lost').reduce((s, r) => s + (r.fields.Amount || 0), 0);
+                const pnl = totalWon - totalLost;
+                const pnlEl = document.getElementById('portfolio-pnl');
+                const pnlLabel = document.getElementById('portfolio-pnl-label');
+                if (pnlEl) {
+                    pnlEl.innerText = (pnl >= 0 ? '+' : '') + '₱ ' + Math.abs(pnl).toLocaleString('en-PH', { minimumFractionDigits: 2 });
+                    pnlEl.style.color = pnl >= 0 ? 'var(--profit-green,#10b981)' : 'var(--loss-red,#ef4444)';
+                }
+                if (pnlLabel) pnlLabel.innerText = `${wins}W · ${losses}L · ${pending} Pending`;
+
+                // Update stats boxes
+                const statMap = {
+                    'stat-total-bets': totalBets,
+                    'stat-wins': wins,
+                    'stat-losses': losses,
+                    'stat-winrate': winRate + '%'
+                };
+                Object.entries(statMap).forEach(([id, val]) => {
+                    const el = document.getElementById(id);
+                    if (el) el.innerText = val;
+                });
+
+                // Render bet cards (show last 20)
+                feed.innerHTML = records.slice(0, 20).map(r => {
                     const f = r.fields;
                     const status = f.Status || 'Pending';
-                    const statusColor = status === 'Won' ? 'var(--profit-green)' : status === 'Lost' ? 'var(--loss-red,#ef4444)' : 'var(--ice-blue-accent)';
+                    const statusColor = status === 'Won' ? '#10b981' : status === 'Lost' ? '#ef4444' : '#38bdf8';
                     const statusEmoji = status === 'Won' ? '🏆' : status === 'Lost' ? '💀' : '⏳';
-                    const payout = f.Payout && status === 'Won' ? `+₱${parseFloat(f.Payout).toLocaleString('en-PH')}` : '';
-                    const game = f.Game || f.Description || 'Bet';
-                    const desc = f.Description || '';
-                    return `<div style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+                    const netStr = status === 'Won'
+                        ? `<span style="color:#10b981;">+₱${parseFloat(f.Payout || 0).toLocaleString('en-PH')}</span>`
+                        : status === 'Lost'
+                            ? `<span style="color:#ef4444;">-₱${parseFloat(f.Amount || 0).toLocaleString('en-PH')}</span>`
+                            : `<span style="color:#94a3b8;">₱${parseFloat(f.Amount || 0).toLocaleString('en-PH')}</span>`;
+                    return `<div style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.06);border-left:3px solid ${statusColor};border-radius:8px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
                         <div style="flex:1;min-width:0;">
-                            <div style="font-size:0.85rem;font-weight:600;color:var(--text-main);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${desc || game}</div>
-                            <div style="font-size:0.75rem;color:var(--text-muted);">${f.Type || 'Sports'} · Odds ${parseFloat(f.Odds || 1.9).toFixed(2)}x</div>
+                            <div style="font-size:0.85rem;font-weight:600;color:#f8fafc;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${f.Description || 'Bet'}</div>
+                            <div style="font-size:0.75rem;color:#94a3b8;">${f.Type || 'Sports'} · ${parseFloat(f.Odds || 1.9).toFixed(2)}x odds</div>
                         </div>
                         <div style="text-align:right;white-space:nowrap;">
-                            <div style="font-size:0.9rem;font-weight:700;color:${statusColor};">${statusEmoji} ${status}</div>
-                            <div style="font-size:0.8rem;color:var(--text-muted);">₱${parseFloat(f.Amount || 0).toLocaleString('en-PH')} ${payout}</div>
+                            <div style="font-size:0.85rem;font-weight:700;color:${statusColor};">${statusEmoji} ${status}</div>
+                            <div style="font-size:0.8rem;">${netStr}</div>
                         </div>
                     </div>`;
                 }).join('');
             } catch (e) {
-                feed.innerHTML = '<p style="color:var(--text-muted);">Could not load bet history.</p>';
+                console.error('loadBetHistory error:', e);
+                feed.innerHTML = '<p style="color:#94a3b8;">Could not load bet history.</p>';
             }
         }
 
         async function loadBalance() {
             try {
-                const url = `https://api.airtable.com/v0/${BETTING_BASE_ID}/Users?filterByFormula={UserID}="${USER_ID}"&maxRecords=1`;
+                const url = `https://api.airtable.com/v0/${BETTING_BASE_ID}/Users?filterByFormula=${encodeURIComponent('{UserID}="' + USER_ID + '"')}&maxRecords=1`;
                 const res = await fetch(url, { headers: { Authorization: `Bearer ${BETTING_TOKEN}` } });
                 const json = await res.json();
                 if (json.records && json.records.length > 0) {
@@ -2762,81 +2806,79 @@
             const btn = document.getElementById('share-btn');
             btn.innerText = '⏳ Generating...'; btn.disabled = true;
 
-            // Get real stats
-            const wins = document.getElementById('stat-wins')?.innerText || '--';
-            const losses = document.getElementById('stat-losses')?.innerText || '--';
+            const wins = document.getElementById('stat-wins')?.innerText || '0';
+            const losses = document.getElementById('stat-losses')?.innerText || '0';
             const winrate = document.getElementById('stat-winrate')?.innerText || '--%';
-            const balance = document.getElementById('header-balance')?.innerText || '₱ --';
+            const balance = document.getElementById('portfolio-balance')?.innerText || '₱ --';
+            const pnl = document.getElementById('portfolio-pnl')?.innerText || '+₱ 0';
 
-            // Create shareable card
+            // Build shareable card
             const card = document.createElement('div');
-            card.id = 'share-card';
-            card.style.cssText = `
-                position:fixed; top:-9999px; left:-9999px;
-                width:600px; height:340px;
-                background:linear-gradient(135deg,#020617 0%,#0b1628 50%,#091020 100%);
-                border:2px solid rgba(56,189,248,0.4);
-                border-radius:16px; padding:36px; box-sizing:border-box;
-                font-family:Inter,sans-serif; color:white;
-                display:flex; flex-direction:column; justify-content:space-between;
-            `;
+            card.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:600px;height:320px;background:linear-gradient(135deg,#020617 0%,#0b1628 60%,#091020 100%);border:2px solid rgba(56,189,248,0.4);border-radius:16px;padding:32px;box-sizing:border-box;font-family:Inter,sans-serif;color:white;';
             card.innerHTML = `
-                <div>
-                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
-                        <div style="width:36px;height:36px;background:linear-gradient(135deg,#38bdf8,#1d4ed8);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1rem;">W</div>
-                        <div>
-                            <div style="font-weight:800;font-size:1rem;letter-spacing:2px;text-transform:uppercase;">WINTER ANALYTICS</div>
-                            <div style="font-size:0.7rem;color:#94a3b8;letter-spacing:1px;">SPORTS INTELLIGENCE PLATFORM</div>
-                        </div>
-                        <div style="margin-left:auto;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);border-radius:99px;padding:4px 12px;font-size:0.72rem;color:#10b981;font-weight:700;">● LIVE</div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+                    <div style="width:32px;height:32px;background:linear-gradient(135deg,#38bdf8,#1d4ed8);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.9rem;">W</div>
+                    <div style="font-weight:800;font-size:0.95rem;letter-spacing:2px;text-transform:uppercase;">WINTER ANALYTICS</div>
+                    <div style="margin-left:auto;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);border-radius:99px;padding:3px 10px;font-size:0.68rem;color:#10b981;font-weight:700;">● LIVE</div>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+                    <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:10px;padding:14px;text-align:center;">
+                        <div style="font-size:0.6rem;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Wins</div>
+                        <div style="font-size:1.8rem;font-weight:800;color:#10b981;">${wins}</div>
                     </div>
-                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
-                        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:16px;text-align:center;">
-                            <div style="font-size:0.65rem;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Wins</div>
-                            <div style="font-size:2rem;font-weight:800;color:#10b981;">${wins}</div>
-                        </div>
-                        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:16px;text-align:center;">
-                            <div style="font-size:0.65rem;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Losses</div>
-                            <div style="font-size:2rem;font-weight:800;color:#ef4444;">${losses}</div>
-                        </div>
-                        <div style="background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.2);border-radius:10px;padding:16px;text-align:center;">
-                            <div style="font-size:0.65rem;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Win Rate</div>
-                            <div style="font-size:2rem;font-weight:800;color:#38bdf8;">${winrate}</div>
-                        </div>
-                        <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:10px;padding:16px;text-align:center;">
-                            <div style="font-size:0.65rem;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Balance</div>
-                            <div style="font-size:1.3rem;font-weight:800;color:#fbbf24;">${balance}</div>
-                        </div>
+                    <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:14px;text-align:center;">
+                        <div style="font-size:0.6rem;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Losses</div>
+                        <div style="font-size:1.8rem;font-weight:800;color:#ef4444;">${losses}</div>
+                    </div>
+                    <div style="background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.2);border-radius:10px;padding:14px;text-align:center;">
+                        <div style="font-size:0.6rem;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Win Rate</div>
+                        <div style="font-size:1.8rem;font-weight:800;color:#38bdf8;">${winrate}</div>
+                    </div>
+                    <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:10px;padding:14px;text-align:center;">
+                        <div style="font-size:0.6rem;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">P&L</div>
+                        <div style="font-size:1.2rem;font-weight:800;color:#fbbf24;">${pnl}</div>
                     </div>
                 </div>
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);">
-                    <div style="font-size:0.8rem;color:#94a3b8;">I track my picks with <span style="color:#38bdf8;font-weight:700;">Winter Analytics</span></div>
-                    <div style="font-size:0.75rem;color:#475569;">winterbet.netlify.app</div>
-                </div>
-            `;
+                <div style="display:flex;justify-content:space-between;align-items:center;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07);">
+                    <div style="font-size:0.78rem;color:#94a3b8;">I use <span style="color:#38bdf8;font-weight:700;">Winter Analytics</span> for my sports picks</div>
+                    <div style="font-size:0.7rem;color:#475569;">winterbet.netlify.app</div>
+                </div>`;
             document.body.appendChild(card);
 
+            let imgData = null;
             try {
-                const canvas = await html2canvas(card, { backgroundColor: null, scale: 2, useCORS: true });
+                const canvas = await html2canvas(card, { backgroundColor: null, scale: 2, useCORS: true, logging: false });
                 document.body.removeChild(card);
-                const imgData = canvas.toDataURL('image/png');
-
-                // Download the image
-                const link = document.createElement('a');
-                link.download = 'winter-analytics-portfolio.png';
-                link.href = imgData;
-                link.click();
-
-                // Open Twitter share
-                const text = encodeURIComponent(`My Winter Analytics betting record: ${wins}W-${losses}L at ${winrate} win rate! 🔥 Track your picks at winterbet.netlify.app #WinterAnalytics #SportsBetting`);
-                setTimeout(() => window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank'), 500);
-
-                showToast('✅ Portfolio card downloaded! Opening X to share...', 4000);
+                imgData = canvas.toDataURL('image/png');
             } catch (e) {
-                document.body.removeChild(card);
-                showToast('Error generating image. Try again.', 3000);
+                if (document.body.contains(card)) document.body.removeChild(card);
+                imgData = null;
             }
-            btn.innerText = '📤 Share My Alpha'; btn.disabled = false;
+
+            btn.innerText = '📲 Share on Social'; btn.disabled = false;
+
+            // Build share text
+            const shareText = `My Winter Analytics record: ${wins}W - ${losses}L at ${winrate} win rate! 🔥 Powered by @WinterAnalytics AI sports intelligence. Try it at winterbet.netlify.app`;
+            const shareUrl = 'https://winterbet.netlify.app/dashboard.html';
+
+            // Show share options modal
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position:fixed;inset:0;background:rgba(2,6,23,0.92);backdrop-filter:blur(8px);z-index:9999;display:flex;align-items:center;justify-content:center;';
+            modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+            modal.innerHTML = `
+                <div style="background:#0b1120;border:1px solid rgba(56,189,248,0.2);border-radius:16px;padding:32px;width:360px;max-width:90vw;">
+                    <div style="font-size:1rem;font-weight:700;color:#f8fafc;margin-bottom:6px;">📲 Share Your Record</div>
+                    <div style="font-size:0.8rem;color:#94a3b8;margin-bottom:20px;">${wins}W - ${losses}L · ${winrate} Win Rate</div>
+                    <div style="display:flex;flex-direction:column;gap:10px;">
+                        ${imgData ? `<button onclick="const a=document.createElement('a');a.download='winter-record.png';a.href='${imgData}';a.click();" style="padding:12px;background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.3);color:#38bdf8;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.9rem;">💾 Download Image</button>` : ''}
+                        <button onclick="window.open('https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}','_blank')" style="padding:12px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);color:#f8fafc;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.9rem;">𝕏 Share on X / Twitter</button>
+                        <button onclick="window.open('https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}','_blank')" style="padding:12px;background:rgba(24,119,242,0.15);border:1px solid rgba(24,119,242,0.3);color:#60a5fa;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.9rem;">📘 Share on Facebook</button>
+                        <button onclick="window.open('https://www.threads.net/intent/post?text=${encodeURIComponent(shareText + ' ' + shareUrl)}','_blank')" style="padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);color:#f8fafc;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.9rem;">🧵 Share on Threads</button>
+                        <button onclick="navigator.clipboard.writeText('${shareText.replace(/'/g, "\'")} ${shareUrl}').then(()=>showToast('✅ Copied to clipboard!',2500))" style="padding:12px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);color:#10b981;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.9rem;">📋 Copy Link + Text</button>
+                    </div>
+                    <button onclick="this.closest('[style*=fixed]').remove()" style="width:100%;margin-top:12px;padding:10px;background:transparent;border:1px solid rgba(255,255,255,0.08);color:#94a3b8;border-radius:8px;cursor:pointer;font-size:0.85rem;">Close</button>
+                </div>`;
+            document.body.appendChild(modal);
         }
 
         // ── LOGOUT ──
