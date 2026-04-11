@@ -2706,20 +2706,13 @@
             const feed = document.getElementById('bw-feed');
             feed.innerHTML = '<div class="bw-empty">Syncing Winter\'s predictions...</div>';
             try {
-                // Paginate through ALL BeatWinter records
-                let allBWRecords = [];
-                let bwOffset = null;
-                const bwBaseUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/BeatWinter?sort%5B0%5D%5Bfield%5D=GameDate&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=100`;
-                while (true) {
-                    const bwUrl = bwOffset ? bwBaseUrl + '&offset=' + encodeURIComponent(bwOffset) : bwBaseUrl;
-                    const bwRes = await fetch(bwUrl, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
-                    const bwJson = await bwRes.json();
-                    if (!bwJson.records || bwJson.records.length === 0) break;
-                    allBWRecords = allBWRecords.concat(bwJson.records);
-                    if (!bwJson.offset) break;
-                    bwOffset = bwJson.offset;
-                }
-                const json = { records: allBWRecords };
+                // Fetch ALL BeatWinter records in one call (max 500)
+                const bwRes = await fetch(
+                    `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/BeatWinter?sort%5B0%5D%5Bfield%5D=GameDate&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=500`,
+                    { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
+                );
+                const bwJson = await bwRes.json();
+                const json = { records: bwJson.records || [] };
                 if (!json.records || json.records.length === 0) { feed.innerHTML = '<div class="bw-empty">No predictions yet. Winter is watching the markets...</div>'; return; }
                 let wins = 0, losses = 0, pending = 0, streak = 0, streakType = '';
                 json.records.forEach(r => {
