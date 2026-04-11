@@ -1553,17 +1553,7 @@
         }
 
         /* ─── LIVE SCORE TICKER ─── */
-        #live-ticker-bar {
-            background: rgba(2, 6, 23, 0.95);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 6px 0;
-            overflow: hidden;
-            white-space: nowrap;
-            font-size: 0.72rem;
-            font-family: var(--font-mono, monospace);
-            color: var(--text-muted, #94a3b8);
-        }
-
+        /* Ticker removed - using toast for live updates */
         .ticker-scroll {
             display: inline-block;
             animation: ticker-scroll 40s linear infinite;
@@ -1789,15 +1779,6 @@
             <div class="avatar-btn" title="Profile">WA</div>
         </div>
     </header>
-
-    <!-- ═══ LIVE TICKER BAR ═══ -->
-    <div id="live-ticker-bar">
-        <span class="ticker-scroll" id="ticker-scroll-content">
-            <span class="ticker-item">⚡ WINTER ANALYTICS — LIVE SPORTS INTELLIGENCE</span>
-            <span class="ticker-item ticker-live">● LIVE</span>
-            <span class="ticker-item">Loading today's scores...</span>
-        </span>
-    </div>
 
     <!-- ═══ TOAST NOTIFICATION ═══ -->
     <div id="wa-toast">
@@ -2834,7 +2815,7 @@
                         }
                     } catch (e) { }
                 }
-                select.innerHTML = '<option value="none">-- Select today's matchup--</option > ';
+                select.innerHTML = '<option value="none">-- Select today\'s matchup --</option>';
                 allMatchups.forEach(m => {
                     const opt = document.createElement('option');
                     opt.value = JSON.stringify({ matchup: m.matchup, league: m.league });
@@ -3084,6 +3065,13 @@
             window.nav('basketball', 'Basketball');
         }
         loadBalance();
+        // Live ticker and welcome toast
+        setTimeout(() => {
+            if (typeof loadLiveTicker === 'function') loadLiveTicker();
+        }, 1000);
+        setTimeout(() => {
+            if (typeof showToast === 'function') showToast('⚡ Winter is live — 63% win rate this season', 4000);
+        }, 2500);
     </script>
 </body>
 
