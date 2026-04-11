@@ -2260,11 +2260,32 @@
         }
 
         async function getBettingRecord() {
-            const url = `https://api.airtable.com/v0/${BETTING_BASE_ID}/Users?filterByFormula={UserID}="${USER_ID}"&maxRecords=1`;
-            const res = await fetch(url, { headers: { Authorization: `Bearer ${BETTING_TOKEN}` } });
-            const json = await res.json();
-            if (!json.records || json.records.length === 0) return null;
-            return json.records[0];
+            try {
+                const url = `https://api.airtable.com/v0/${BETTING_BASE_ID}/Users?filterByFormula=${encodeURIComponent('{UserID}="' + USER_ID + '"')}&maxRecords=1`;
+                const res = await fetch(url, { headers: { Authorization: `Bearer ${BETTING_TOKEN}` } });
+                const json = await res.json();
+                if (json.records && json.records.length > 0) return json.records[0];
+                // User doesn't exist — create them
+                console.log('User not found, creating:', USER_ID);
+                const createRes = await fetch(`https://api.airtable.com/v0/${BETTING_BASE_ID}/Users`, {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${BETTING_TOKEN}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        records: [{
+                            fields: {
+                                UserID: USER_ID, Balance: 50000,
+                                TotalWon: 0, TotalLost: 0
+                            }
+                        }], typecast: true
+                    })
+                });
+                const createJson = await createRes.json();
+                if (createJson.records && createJson.records.length > 0) {
+                    console.log('User created:', createJson.records[0].id);
+                    return createJson.records[0];
+                }
+                return null;
+            } catch (e) { console.error('getBettingRecord error:', e); return null; }
         }
 
         async function deductBalance(amount, description, odds, type) {
@@ -2278,10 +2299,26 @@
                     method: 'PATCH', headers: { Authorization: `Bearer ${BETTING_TOKEN}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({ fields: { Balance: newBal, TotalLost: newLost } })
                 });
-                await fetch(`https://api.airtable.com/v0/${BETTING_BASE_ID}/Bets`, {
+                const betRes = await fetch(`https://api.airtable.com/v0/${BETTING_BASE_ID}/Bets`, {
                     method: 'POST', headers: { Authorization: `Bearer ${BETTING_TOKEN}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ records: [{ fields: { UserID: USER_ID, Type: type || 'Sports', Description: description, Amount: amount, Odds: odds || 1.0, Payout: Math.round(amount * (odds || 1.0)), Status: 'Pending' } }] })
+                    body: JSON.stringify({
+                        records: [{
+                            fields: {
+                                User: USER_ID,
+                                Type: type || 'Sports',
+                                Description: description,
+                                Amount: amount,
+                                Odds: odds || 1.9,
+                                Payout: Math.round(amount * (odds || 1.9)),
+                                Status: 'Pending',
+                                Game: description
+                            }
+                        }], typecast: true
+                    })
                 });
+                const betJson = await betRes.json();
+                if (betJson.error) console.error('Bet write error:', betJson.error);
+                else console.log('Bet written to Airtable:', betJson.records?.[0]?.id);
                 currentBalance = newBal;
                 updateBalanceDisplay();
                 return true;
@@ -2364,28 +2401,6 @@
             btn.innerText = 'Processing...'; btn.disabled = true;
             const ok = await deductBalance(amount, 'Bet on ' + teamName, odds, 'Sports');
             if (ok) {
-                // Write bet to Airtable Bets table
-                try {
-                    await fetch(`https://api.airtable.com/v0/${BETTING_BASE_ID}/Bets`, {
-                        method: 'POST',
-                        headers: { Authorization: `Bearer ${BETTING_TOKEN}`, 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            records: [{
-                                fields: {
-                                    User: USER_ID,
-                                    Description: 'Bet on ' + teamName,
-                                    Amount: amount,
-                                    Odds: odds,
-                                    Payout: payout,
-                                    Status: 'Pending',
-                                    Type: 'Sports',
-                                    Game: teamName
-                                }
-                            }]
-                        })
-                    });
-                } catch (e) { console.log('Bet log error:', e); }
-
                 document.getElementById('bet-slip').innerHTML = `
                     <div style="text-align:center;padding:15px;">
                         <div style="font-size:1.5rem;margin-bottom:8px;">✅</div>
@@ -2550,22 +2565,7 @@
                     body: JSON.stringify({ fields: { YesPool: yP, NoPool: nP, YesOdds: newY, NoOdds: newN } })
                 });
 
-                // Write to Bets table for portfolio history
-                const payout = Math.round(amount * parseFloat(bet.odds));
-                await fetch(`https://api.airtable.com/v0/${BETTING_BASE_ID}/Bets`, {
-                    method: 'POST', headers: { Authorization: `Bearer ${BETTING_TOKEN}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        records: [{
-                            fields: {
-                                User: USER_ID,
-                                Description: `Predict ${bet.side}: ${question.substring(0, 50)}`,
-                                Amount: amount, Odds: parseFloat(bet.odds), Payout: payout,
-                                Status: 'Pending', Type: 'Prediction',
-                                Game: question.substring(0, 60)
-                            }
-                        }]
-                    })
-                });
+                // Bet already written by deductBalance above
 
                 const payout2 = Math.round(amount * parseFloat(bet.odds));
                 document.getElementById('pslip-' + recordId).innerHTML = `
