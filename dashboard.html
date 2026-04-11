@@ -2708,10 +2708,10 @@
             try {
                 // Paginate through ALL BeatWinter records
                 let allBWRecords = [];
-                let bwOffset = '';
+                let bwOffset = null;
+                const bwBaseUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/BeatWinter?sort%5B0%5D%5Bfield%5D=GameDate&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=100`;
                 while (true) {
-                    let bwUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/BeatWinter?sort%5B0%5D%5Bfield%5D=GameDate&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=100`;
-                    if (bwOffset) bwUrl += `&offset=${bwOffset}`;
+                    const bwUrl = bwOffset ? bwBaseUrl + '&offset=' + encodeURIComponent(bwOffset) : bwBaseUrl;
                     const bwRes = await fetch(bwUrl, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
                     const bwJson = await bwRes.json();
                     if (!bwJson.records || bwJson.records.length === 0) break;
@@ -2719,8 +2719,6 @@
                     if (!bwJson.offset) break;
                     bwOffset = bwJson.offset;
                 }
-                const url = 'paginated'; // placeholder
-                // fetched via pagination above
                 const json = { records: allBWRecords };
                 if (!json.records || json.records.length === 0) { feed.innerHTML = '<div class="bw-empty">No predictions yet. Winter is watching the markets...</div>'; return; }
                 let wins = 0, losses = 0, pending = 0, streak = 0, streakType = '';
