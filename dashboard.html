@@ -2709,7 +2709,7 @@
                 // Fetch ALL BeatWinter records with proper pagination
                 let allBW = [], bwOffset = null;
                 while (true) {
-                    let bwUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/BeatWinter?sort%5B0%5D%5Bfield%5D=GameDate&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=100`;
+                    let bwUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/BeatWinter?sort%5B0%5D%5Bfield%5D=GameDate&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=500`;
                     if (bwOffset) bwUrl += '&offset=' + bwOffset; // raw offset, no encoding
                     const bwR = await fetch(bwUrl, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
                     const bwP = await bwR.json();
