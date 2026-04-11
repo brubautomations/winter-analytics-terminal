@@ -2472,30 +2472,85 @@
                 if (!json.records || json.records.length === 0) {
                     feed.innerHTML = '<p style="color:var(--text-muted);">No active predictions yet.</p>'; return;
                 }
-                const catColor = { Sports: '#38bdf8', Politics: '#f97316', Entertainment: '#a855f7', 'Pop Culture': '#ec4899', 'World Events': '#10b981', Philippines: '#ef4444', Finance: '#f59e0b', Technology: '#6366f1' };
+                const catColor = {
+                    Sports: '#38bdf8', Politics: '#f97316', Entertainment: '#a855f7',
+                    'Pop Culture': '#ec4899', 'World Events': '#10b981',
+                    Philippines: '#ef4444', Finance: '#f59e0b', Technology: '#6366f1',
+                    'K-Pop': '#ec4899', Geopolitics: '#f97316', Celebrity: '#a855f7'
+                };
                 let html = '';
                 json.records.forEach(r => {
                     const f = r.fields;
-                    const yesPool = f.YesPool || 0;
-                    const noPool = f.NoPool || 0;
-                    const total = yesPool + noPool;
-                    const yesPct = total > 0 ? Math.round((yesPool / total) * 100) : 50;
-                    const noPct = 100 - yesPct;
-                    const yesOdds = (f.YesOdds || 2.00).toFixed(2);
-                    const noOdds = (f.NoOdds || 2.00).toFixed(2);
+                    // Build choices array — skip empty
+                    const choices = [];
+                    for (let i = 1; i <= 5; i++) {
+                        const label = f['Choice' + i];
+                        const pool = parseFloat(f['Pool' + i] || 0);
+                        const odds = parseFloat(f['Odds' + i] || 2.00);
+                        if (label && label.trim()) choices.push({ label, pool, odds, idx: i });
+                    }
+                    if (choices.length === 0) return; // skip if no choices set
+
+                    const totalPool = choices.reduce((s, c) => s + c.pool, 0);
                     const color = catColor[f.Category] || '#94a3b8';
-                    const safeQ = (f.Question || '').replace(/'/g, "\\'");
-                    const endDate = f.ResolutionDate ? new Date(f.ResolutionDate).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBD';
+                    const safeQ = (f.Question || '').replace(/'/g, "\'").replace(/`/g, '\`');
+
                     // Countdown
                     let countdown = '';
                     if (f.ResolutionDate) {
                         const diff = new Date(f.ResolutionDate) - new Date();
                         if (diff > 0) {
                             const days = Math.floor(diff / 86400000);
-                            const hours = Math.floor((diff % 86400000) / 3600000);
-                            countdown = days > 0 ? `⏱ ${days}d ${hours}h left` : `⏱ ${hours}h left`;
-                        } else { countdown = '⌛ Resolving soon'; }
+                            const hrs = Math.floor((diff % 86400000) / 3600000);
+                            countdown = days > 0 ? `⏱ ${days}d ${hrs}h left` : `⏱ ${hrs}h left`;
+                        } else countdown = '⌛ Resolving soon';
                     }
+
+                    // Build choice buttons
+                    const isBinary = choices.length === 2 &&
+                        choices[0].label.toUpperCase() === 'YES' &&
+                        choices[1].label.toUpperCase() === 'NO';
+
+                    let choiceButtons = '';
+                    const gridCols = choices.length <= 2 ? '1fr 1fr' :
+                        choices.length === 3 ? '1fr 1fr 1fr' :
+                            choices.length === 4 ? '1fr 1fr 1fr 1fr' : '1fr 1fr 1fr';
+
+                    const choiceColors = [
+                        { bg: 'rgba(16,185,129,0.1)', border: 'rgba(16,185,129,0.35)', text: '#10b981' },
+                        { bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.35)', text: '#ef4444' },
+                        { bg: 'rgba(56,189,248,0.1)', border: 'rgba(56,189,248,0.35)', text: '#38bdf8' },
+                        { bg: 'rgba(251,191,36,0.1)', border: 'rgba(251,191,36,0.35)', text: '#fbbf24' },
+                        { bg: 'rgba(168,85,247,0.1)', border: 'rgba(168,85,247,0.35)', text: '#a855f7' },
+                    ];
+
+                    choices.forEach((c, ci) => {
+                        const col = choiceColors[ci % choiceColors.length];
+                        const pct = totalPool > 0 ? Math.round((c.pool / totalPool) * 100) : Math.round(100 / choices.length);
+                        const safeL = c.label.replace(/'/g, "\'").replace(/`/g, '\`');
+                        choiceButtons += `
+                            <button onclick="openPredictBetSlip('${r.id}',${c.idx},'${safeL}',${c.odds.toFixed(2)},'${safeQ}',${c.pool},${totalPool})"
+                                style="padding:12px 8px;background:${col.bg};border:1px solid ${col.border};color:${col.text};border-radius:8px;cursor:pointer;font-weight:700;font-size:0.82rem;transition:all 0.2s;text-align:center;"
+                                onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                                <div style="font-size:0.95rem;margin-bottom:3px;">${c.label}</div>
+                                <div style="font-size:0.72rem;opacity:0.85;">${c.odds.toFixed(2)}x · ${pct}%</div>
+                            </button>`;
+                    });
+
+                    // Progress bar (for binary only — multi gets pie-style pcts on buttons)
+                    let progressBar = '';
+                    if (isBinary) {
+                        const yesPct = totalPool > 0 ? Math.round((choices[0].pool / totalPool) * 100) : 50;
+                        progressBar = `
+                        <div style="display:flex;justify-content:space-between;font-size:0.72rem;margin-bottom:4px;">
+                            <span style="color:#10b981;font-weight:600;">YES ${yesPct}%</span>
+                            <span style="color:#ef4444;font-weight:600;">NO ${100 - yesPct}%</span>
+                        </div>
+                        <div style="background:rgba(239,68,68,0.2);border-radius:99px;height:5px;margin-bottom:12px;overflow:hidden;">
+                            <div style="background:linear-gradient(90deg,#10b981,#34d399);height:100%;width:${yesPct}%;border-radius:99px;transition:width 0.8s;"></div>
+                        </div>`;
+                    }
+
                     html += `
                     <div style="background:rgba(2,6,23,0.85);backdrop-filter:blur(12px);border:1px solid rgba(168,85,247,0.2);border-radius:12px;padding:22px;transition:border-color 0.2s;margin-bottom:14px;"
                          onmouseover="this.style.borderColor='rgba(168,85,247,0.5)'"
@@ -2503,92 +2558,70 @@
                         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;gap:12px;">
                             <div style="flex:1;">
                                 <span style="font-size:0.68rem;color:${color};text-transform:uppercase;letter-spacing:1px;font-weight:700;">${f.Category || 'General'}</span>
-                                <div style="font-size:1rem;font-weight:700;color:var(--text-main);margin-top:4px;line-height:1.4;">${f.Question || ''}</div>
+                                <div style="font-size:1rem;font-weight:700;color:#f8fafc;margin-top:4px;line-height:1.4;">${f.Question || ''}</div>
                             </div>
-                            <div style="text-align:right;white-space:nowrap;">
-                                <div style="font-size:0.72rem;color:var(--text-muted);">${countdown}</div>
-                                <div style="font-size:0.72rem;color:#f59e0b;margin-top:2px;">Pool: ₱${total.toLocaleString()}</div>
+                            <div style="text-align:right;white-space:nowrap;flex-shrink:0;">
+                                <div style="font-size:0.72rem;color:#94a3b8;">${countdown}</div>
+                                <div style="font-size:0.72rem;color:#f59e0b;margin-top:2px;">Pool: ₱${totalPool.toLocaleString()}</div>
+                                <div style="font-size:0.68rem;color:#64748b;margin-top:1px;">${choices.length} choices</div>
                             </div>
                         </div>
-                        <div style="display:flex;justify-content:space-between;font-size:0.75rem;margin-bottom:4px;">
-                            <span style="color:#10b981;font-weight:600;">YES ${yesPct}%</span>
-                            <span style="color:#ef4444;font-weight:600;">NO ${noPct}%</span>
-                        </div>
-                        <div style="background:rgba(239,68,68,0.2);border-radius:99px;height:6px;margin-bottom:14px;overflow:hidden;">
-                            <div style="background:linear-gradient(90deg,#10b981,#34d399);height:100%;width:${yesPct}%;border-radius:99px;transition:width 0.8s;"></div>
-                        </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
-                            <button onclick="openPredictBetSlip('${r.id}','Yes',${yesOdds},'${safeQ}',${yesPool},${noPool})"
-                                style="padding:12px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.35);color:#10b981;border-radius:8px;cursor:pointer;font-weight:700;font-size:0.9rem;transition:all 0.2s;"
-                                onmouseover="this.style.background='rgba(16,185,129,0.2)'"
-                                onmouseout="this.style.background='rgba(16,185,129,0.1)'">
-                                ✓ YES<br><span style="font-size:0.78rem;opacity:0.85;">Win ${yesOdds}x</span>
-                            </button>
-                            <button onclick="openPredictBetSlip('${r.id}','No',${noOdds},'${safeQ}',${yesPool},${noPool})"
-                                style="padding:12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.35);color:#ef4444;border-radius:8px;cursor:pointer;font-weight:700;font-size:0.9rem;transition:all 0.2s;"
-                                onmouseover="this.style.background='rgba(239,68,68,0.2)'"
-                                onmouseout="this.style.background='rgba(239,68,68,0.1)'">
-                                ✗ NO<br><span style="font-size:0.78rem;opacity:0.85;">Win ${noOdds}x</span>
-                            </button>
+                        ${progressBar}
+                        <div style="display:grid;grid-template-columns:${gridCols};gap:8px;margin-bottom:12px;">
+                            ${choiceButtons}
                         </div>
                         <div id="pslip-${r.id}" style="display:none;padding:14px;background:rgba(0,0,0,0.3);border-radius:8px;border:1px solid rgba(255,255,255,0.08);">
                             <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
-                                <span id="pslip-team-${r.id}" style="font-weight:700;color:var(--text-main);font-size:0.9rem;"></span>
+                                <span id="pslip-team-${r.id}" style="font-weight:700;color:#f8fafc;font-size:0.9rem;"></span>
                                 <span id="pslip-odds-${r.id}" style="color:#10b981;font-weight:700;"></span>
                             </div>
                             <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
                                 <input id="pslip-amount-${r.id}" type="number" min="50" step="50" placeholder="Amount (₱)"
-                                    style="flex:1;min-width:100px;background:rgba(15,23,42,0.8);border:1px solid rgba(255,255,255,0.15);color:white;padding:9px 12px;border-radius:6px;font-family:Inter;font-size:0.9rem;outline:none;"
+                                    style="flex:1;min-width:100px;background:rgba(15,23,42,0.8);border:1px solid rgba(255,255,255,0.15);color:white;padding:9px 12px;border-radius:6px;font-size:0.9rem;outline:none;"
                                     oninput="updatePredictPayout('${r.id}')">
-                                <button onclick="document.getElementById('pslip-amount-${r.id}').value=500;updatePredictPayout('${r.id}')" style="padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--text-muted);border-radius:6px;cursor:pointer;font-size:0.8rem;">500</button>
-                                <button onclick="document.getElementById('pslip-amount-${r.id}').value=1000;updatePredictPayout('${r.id}')" style="padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--text-muted);border-radius:6px;cursor:pointer;font-size:0.8rem;">1K</button>
-                                <button onclick="document.getElementById('pslip-amount-${r.id}').value=5000;updatePredictPayout('${r.id}')" style="padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--text-muted);border-radius:6px;cursor:pointer;font-size:0.8rem;">5K</button>
+                                <button onclick="document.getElementById('pslip-amount-${r.id}').value=500;updatePredictPayout('${r.id}')" style="padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#94a3b8;border-radius:6px;cursor:pointer;font-size:0.8rem;">₱500</button>
+                                <button onclick="document.getElementById('pslip-amount-${r.id}').value=1000;updatePredictPayout('${r.id}')" style="padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#94a3b8;border-radius:6px;cursor:pointer;font-size:0.8rem;">₱1K</button>
+                                <button onclick="document.getElementById('pslip-amount-${r.id}').value=5000;updatePredictPayout('${r.id}')" style="padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#94a3b8;border-radius:6px;cursor:pointer;font-size:0.8rem;">₱5K</button>
                             </div>
                             <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
-                                <span style="font-size:0.8rem;color:var(--text-muted);">Potential win:</span>
+                                <span style="font-size:0.8rem;color:#94a3b8;">Potential win:</span>
                                 <span id="pslip-payout-${r.id}" style="font-weight:700;color:#10b981;">₱0</span>
                             </div>
                             <button onclick="confirmPredictBet('${r.id}','${safeQ}')" id="pslip-btn-${r.id}"
-                                style="width:100%;padding:11px;background:linear-gradient(135deg,rgba(168,85,247,0.4),rgba(139,92,246,0.4));border:1px solid rgba(168,85,247,0.5);color:#d8b4fe;border-radius:6px;font-weight:700;cursor:pointer;">
+                                style="width:100%;padding:12px;background:linear-gradient(135deg,rgba(168,85,247,0.5),rgba(139,92,246,0.5));border:1px solid rgba(168,85,247,0.6);color:#e9d5ff;border-radius:8px;font-weight:800;cursor:pointer;font-size:0.95rem;">
                                 ✦ Confirm Prediction Bet
                             </button>
                         </div>
                     </div>`;
                 });
-                feed.innerHTML = html;
-                startPredictTicker(json.records);
+                feed.innerHTML = html || '<p style="color:#94a3b8;">No predictions with choices set up yet.</p>';
             } catch (e) {
                 console.error(e);
-                feed.innerHTML = '<p style="color:var(--loss-red,#ef4444);">Error loading predictions.</p>';
+                feed.innerHTML = '<p style="color:#ef4444;">Error loading predictions.</p>';
             }
         }
 
 
         window._predictBets = {};
 
-        function openPredictBetSlip(recordId, side, odds, question, yesPool, noPool) {
+        function openPredictBetSlip(recordId, choiceIdx, choiceLabel, odds, question, choicePool, totalPool) {
+            // Close all other open slips
             document.querySelectorAll('[id^="pslip-rec"]').forEach(el => {
                 if (el.id !== 'pslip-' + recordId) el.style.display = 'none';
             });
-            window._predictBets[recordId] = { side, odds, question, yesPool, noPool };
-            const label = side === 'Yes' ? '✓ YES — Betting YES' : '✗ NO — Betting NO';
-            const slipEl = document.getElementById('pslip-' + recordId);
-            if (!slipEl) return;
-            document.getElementById('pslip-team-' + recordId).innerText = label;
-            document.getElementById('pslip-odds-' + recordId).innerText = '@ ' + parseFloat(odds).toFixed(2) + 'x';
-            document.getElementById('pslip-amount-' + recordId).value = '';
-            document.getElementById('pslip-payout-' + recordId).innerText = '₱0';
-            const btn = document.getElementById('pslip-btn-' + recordId);
-            if (btn) { btn.innerText = '✦ Confirm Prediction Bet'; btn.disabled = false; }
-            slipEl.style.display = slipEl.style.display === 'block' ? 'none' : 'block';
+            window._predictBets[recordId] = { choiceIdx, choiceLabel, odds, question, choicePool, totalPool };
+            const slip = document.getElementById('pslip-' + recordId);
+            if (!slip) return;
+            const isOpen = slip.style.display !== 'none';
+            slip.style.display = isOpen ? 'none' : 'block';
+            if (!isOpen) {
+                document.getElementById('pslip-team-' + recordId).innerText = choiceLabel;
+                document.getElementById('pslip-odds-' + recordId).innerText = '@ ' + parseFloat(odds).toFixed(2) + 'x';
+                document.getElementById('pslip-amount-' + recordId).value = '';
+                document.getElementById('pslip-payout-' + recordId).innerText = '₱0';
+            }
         }
 
-        function updatePredictPayout(recordId) {
-            const bet = window._predictBets[recordId];
-            if (!bet) return;
-            const amt = parseFloat(document.getElementById('pslip-amount-' + recordId).value) || 0;
-            document.getElementById('pslip-payout-' + recordId).innerText = '₱' + Math.round(amt * parseFloat(bet.odds)).toLocaleString('en-PH');
-        }
 
         async function confirmPredictBet(recordId, question) {
             const bet = window._predictBets[recordId];
@@ -2597,37 +2630,43 @@
             if (!amount || amount < 50) { alert('Minimum bet is ₱50'); return; }
             const btn = document.getElementById('pslip-btn-' + recordId);
             btn.innerText = 'Processing...'; btn.disabled = true;
-            const ok = await deductBalance(amount, `Predict: ${bet.side} — ${question.substring(0, 40)}`, parseFloat(bet.odds), 'Prediction');
+
+            const ok = await deductBalance(amount,
+                `Predict: ${bet.choiceLabel} — ${question.substring(0, 40)}`,
+                parseFloat(bet.odds), 'Prediction');
             if (!ok) { btn.innerText = '✦ Confirm Prediction Bet'; btn.disabled = false; return; }
 
             try {
-                // Update pool in Airtable
-                const recRes = await fetch(`https://api.airtable.com/v0/${BETTING_BASE_ID}/Predictions/${recordId}`, { headers: { Authorization: `Bearer ${BETTING_TOKEN}` } });
+                // Update the correct pool in Airtable
+                const poolKey = 'Pool' + bet.choiceIdx;
+                const oddsKey = 'Odds' + bet.choiceIdx;
+                const recRes = await fetch(`https://api.airtable.com/v0/${BETTING_BASE_ID}/Predictions/${recordId}`,
+                    { headers: { Authorization: `Bearer ${BETTING_TOKEN}` } });
                 const recJson = await recRes.json();
-                const yP = bet.side === 'Yes' ? (recJson.fields.YesPool || 0) + amount : (recJson.fields.YesPool || 0);
-                const nP = bet.side === 'No' ? (recJson.fields.NoPool || 0) + amount : (recJson.fields.NoPool || 0);
-                const tot = yP + nP;
-                const H = 0.05;
-                const newY = tot > 0 ? parseFloat(((tot * (1 - H)) / yP).toFixed(2)) : 2.0;
-                const newN = tot > 0 ? parseFloat(((tot * (1 - H)) / nP).toFixed(2)) : 2.0;
+                const newPool = (recJson.fields[poolKey] || 0) + amount;
+                const newTotal = bet.totalPool + amount;
+                // Recalculate odds for this choice (parimutuel, 5% house edge)
+                const newOdds = newTotal > 0 ? parseFloat(((newTotal * 0.95) / newPool).toFixed(2)) : 2.0;
                 await fetch(`https://api.airtable.com/v0/${BETTING_BASE_ID}/Predictions/${recordId}`, {
-                    method: 'PATCH', headers: { Authorization: `Bearer ${BETTING_TOKEN}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ fields: { YesPool: yP, NoPool: nP, YesOdds: newY, NoOdds: newN } })
+                    method: 'PATCH',
+                    headers: { Authorization: `Bearer ${BETTING_TOKEN}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fields: { [poolKey]: newPool, [oddsKey]: newOdds } })
                 });
 
-                // Bet already written by deductBalance above
-
-                const payout2 = Math.round(amount * parseFloat(bet.odds));
+                const payout = Math.round(amount * parseFloat(bet.odds));
                 document.getElementById('pslip-' + recordId).innerHTML = `
-                    <div style="text-align:center;padding:14px;">
+                    <div style="text-align:center;padding:16px;">
                         <div style="font-size:1.4rem;margin-bottom:8px;">✅</div>
                         <div style="font-weight:700;color:#d8b4fe;margin-bottom:4px;">Prediction Bet Placed!</div>
-                        <div style="font-size:0.85rem;color:var(--text-muted);">₱${amount.toLocaleString()} on ${bet.side}</div>
-                        <div style="font-size:0.85rem;color:#10b981;">If correct: ₱${payout2.toLocaleString()} credited to your balance</div>
-                        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">Odds updated — market is moving!</div>
+                        <div style="font-size:0.88rem;color:#94a3b8;">₱${amount.toLocaleString()} on <strong style="color:#f8fafc;">${bet.choiceLabel}</strong></div>
+                        <div style="font-size:0.85rem;color:#10b981;margin-top:4px;">If correct: ₱${payout.toLocaleString()} credited!</div>
+                        <div style="font-size:0.72rem;color:#64748b;margin-top:4px;">Odds updated — market is moving 📈</div>
                     </div>`;
                 setTimeout(() => loadPredictions(), 3000);
-            } catch (e) { console.error(e); btn.innerText = '✦ Confirm Prediction Bet'; btn.disabled = false; }
+            } catch (e) {
+                console.error(e);
+                btn.innerText = '✦ Confirm Prediction Bet'; btn.disabled = false;
+            }
         }
 
 
@@ -2966,10 +3005,10 @@
             ctx.fillStyle = '#38bdf8';
             ctx.font = 'bold 22px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText('❄️ Winter Analytics — Advanced AI Sports and Predictive Market Platform', W / 2, 802);
+            ctx.fillText('⚡ Powered by Winter AI — Gemini 2.5 Flash Sports Intelligence', W / 2, 802);
             ctx.fillStyle = 'rgba(255,255,255,0.3)';
             ctx.font = '18px Arial';
-            ctx.fillText('Pick your bets at winterbet.netlify.app', W / 2, 838);
+            ctx.fillText('Track your picks at winterbet.netlify.app', W / 2, 838);
 
             // Footer
             ctx.strokeStyle = 'rgba(255,255,255,0.06)';
