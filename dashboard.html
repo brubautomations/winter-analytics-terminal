@@ -1484,6 +1484,118 @@
             background: var(--text-muted);
         }
 
+        /* ─── COUNTDOWN BADGE ─── */
+        .countdown-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 99px;
+            font-family: var(--font-mono, 'JetBrains Mono', monospace);
+        }
+
+        .countdown-live {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            animation: pulse-red 1.5s infinite;
+        }
+
+        .countdown-soon {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .countdown-later {
+            background: rgba(56, 189, 248, 0.08);
+            color: var(--ice-blue-accent, #38bdf8);
+            border: 1px solid rgba(56, 189, 248, 0.15);
+        }
+
+        @keyframes pulse-red {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        /* ─── NOTIFICATION TOAST ─── */
+        #wa-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 10px;
+            padding: 14px 18px;
+            font-size: 0.85rem;
+            color: var(--text-main, #f8fafc);
+            z-index: 9999;
+            backdrop-filter: blur(12px);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            max-width: 320px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        #wa-toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* ─── LIVE SCORE TICKER ─── */
+        #live-ticker-bar {
+            background: rgba(2, 6, 23, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 6px 0;
+            overflow: hidden;
+            white-space: nowrap;
+            font-size: 0.72rem;
+            font-family: var(--font-mono, monospace);
+            color: var(--text-muted, #94a3b8);
+        }
+
+        .ticker-scroll {
+            display: inline-block;
+            animation: ticker-scroll 40s linear infinite;
+        }
+
+        @keyframes ticker-scroll {
+            0% {
+                transform: translateX(100vw);
+            }
+
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+        .ticker-item {
+            margin: 0 32px;
+        }
+
+        .ticker-live {
+            color: #ef4444;
+            font-weight: 700;
+        }
+
+        .ticker-win {
+            color: #10b981;
+        }
+
+        .ticker-loss {
+            color: #ef4444;
+        }
+
         /* ─── MONEY RAIN EASTER EGG ─── */
         .money-fire-drop {
             position: fixed;
@@ -1678,6 +1790,20 @@
         </div>
     </header>
 
+    <!-- ═══ LIVE TICKER BAR ═══ -->
+    <div id="live-ticker-bar">
+        <span class="ticker-scroll" id="ticker-scroll-content">
+            <span class="ticker-item">⚡ WINTER ANALYTICS — LIVE SPORTS INTELLIGENCE</span>
+            <span class="ticker-item ticker-live">● LIVE</span>
+            <span class="ticker-item">Loading today's scores...</span>
+        </span>
+    </div>
+
+    <!-- ═══ TOAST NOTIFICATION ═══ -->
+    <div id="wa-toast">
+        <span id="wa-toast-msg">Welcome back!</span>
+    </div>
+
     <!-- ═══ SIDEBAR ═══ -->
     <div class="sidebar">
         <div style="flex:1;">
@@ -1817,6 +1943,17 @@
                 </div>
                 <div class="brag-box"><button class="btn-brag"
                         onclick="alert('Preparing graphic to share to X/Twitter...')">🔗 Share My Alpha</button></div>
+
+                <!-- BET HISTORY -->
+                <div style="margin-top:24px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                        <h3 style="margin:0;font-size:1rem;font-weight:600;color:var(--text-main);">Recent Bets</h3>
+                        <span style="font-size:0.75rem;color:var(--text-muted);">Last 20 bets</span>
+                    </div>
+                    <div id="bet-history-feed" style="display:flex;flex-direction:column;gap:10px;">
+                        <p style="color:var(--text-muted);font-size:0.9rem;">Loading bet history...</p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1840,16 +1977,26 @@
                         <button class="btn-send" onclick="sendMockMessage()">Send</button>
                     </div>
                 </div>
-                <div class="scout-container">
-                    <div class="scout-tools">
-                        <select class="scout-select" id="hot-matchup-select" onchange="runTacticalSimulation()">
-                            <option value="none">-- Syncing Global Matchups... --</option>
+                <div class="scout-container" style="display:flex;flex-direction:column;">
+                    <div class="scout-tools" style="border-bottom:1px solid rgba(255,255,255,0.06);">
+                        <div
+                            style="font-size:0.75rem;color:var(--ice-blue-accent);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">
+                            ⚡ Deep Dive Analysis</div>
+                        <select class="scout-select" id="hot-matchup-select" onchange="runDeepDive(this.value)">
+                            <option value="none">-- Select today's matchup --</option>
                         </select>
+                        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;" id="deep-dive-tags"></div>
                     </div>
-                    <div class="tactical-board" id="t-board"></div>
-                    <div class="scout-body" id="scout-content">
-                        <h3 style="color:var(--text-muted);text-align:center;margin-top:30px;">Select a live matchup
-                            above to initialize simulation.</h3>
+                    <div class="scout-body" id="scout-content" style="flex:1;overflow-y:auto;padding:20px;">
+                        <div style="text-align:center;padding:40px 20px;">
+                            <div style="font-size:2rem;margin-bottom:12px;">⚡</div>
+                            <div style="color:var(--text-muted);font-size:0.9rem;line-height:1.6;">Select a matchup
+                                above<br>Winter will generate a full deep dive<br>powered by real-time data</div>
+                        </div>
+                    </div>
+                    <div style="padding:12px;border-top:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.2);">
+                        <div style="font-size:0.7rem;color:var(--text-muted);text-align:center;">Powered by Winter AI ×
+                            Gemini 2.5 Flash</div>
                     </div>
                 </div>
             </div>
@@ -2065,6 +2212,38 @@
         window._activeBetOdds = 1.9;
 
         // ── BALANCE SYSTEM ──
+        async function loadBetHistory() {
+            const feed = document.getElementById('bet-history-feed');
+            if (!feed) return;
+            try {
+                const url = `https://api.airtable.com/v0/${BETTING_BASE_ID}/Bets?filterByFormula=${encodeURIComponent('{UserID}="' + USER_ID + '"')}&sort%5B0%5D%5Bfield%5D=Created%20time&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=20`;
+                const res = await fetch(url, { headers: { Authorization: `Bearer ${BETTING_TOKEN}` } });
+                const json = await res.json();
+                if (!json.records || json.records.length === 0) {
+                    feed.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;">No bets yet. Place your first bet!</p>';
+                    return;
+                }
+                feed.innerHTML = json.records.map(r => {
+                    const f = r.fields;
+                    const status = f.Status || 'Pending';
+                    const statusColor = status === 'Won' ? 'var(--profit-green)' : status === 'Lost' ? 'var(--loss-red)' : 'var(--ice-blue-accent)';
+                    const payout = f.Payout ? `+₱${parseFloat(f.Payout).toLocaleString('en-PH')}` : '';
+                    return `<div style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;">
+                        <div>
+                            <div style="font-size:0.85rem;font-weight:600;color:var(--text-main);margin-bottom:3px;">${f.Description || 'Bet'}</div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);">${f.Type || 'Sports'} · Odds ${parseFloat(f.Odds || 1).toFixed(2)}x · ${f.GameDate || ''}</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:0.9rem;font-weight:700;color:${statusColor};">${status}</div>
+                            <div style="font-size:0.8rem;color:var(--text-muted);">₱${parseFloat(f.Amount || 0).toLocaleString('en-PH')} ${payout}</div>
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch (e) {
+                feed.innerHTML = '<p style="color:var(--text-muted);">Could not load bet history.</p>';
+            }
+        }
+
         async function loadBalance() {
             try {
                 const url = `https://api.airtable.com/v0/${BETTING_BASE_ID}/Users?filterByFormula={UserID}="${USER_ID}"&maxRecords=1`;
@@ -2198,6 +2377,28 @@
             btn.innerText = 'Processing...'; btn.disabled = true;
             const ok = await deductBalance(amount, 'Bet on ' + teamName, odds, 'Sports');
             if (ok) {
+                // Write bet to Airtable Bets table
+                try {
+                    await fetch(`https://api.airtable.com/v0/${BETTING_BASE_ID}/Bets`, {
+                        method: 'POST',
+                        headers: { Authorization: `Bearer ${BETTING_TOKEN}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            records: [{
+                                fields: {
+                                    UserID: USER_ID,
+                                    Description: 'Bet on ' + teamName,
+                                    Amount: amount,
+                                    Odds: odds,
+                                    Payout: payout,
+                                    Status: 'Pending',
+                                    Type: 'Sports',
+                                    GameDate: new Date().toISOString().split('T')[0]
+                                }
+                            }]
+                        })
+                    });
+                } catch (e) { console.log('Bet log error:', e); }
+
                 document.getElementById('bet-slip').innerHTML = `
                     <div style="text-align:center;padding:15px;">
                         <div style="font-size:1.5rem;margin-bottom:8px;">✅</div>
@@ -2213,7 +2414,7 @@
             const feed = document.getElementById('predict-feed');
             feed.innerHTML = '<p style="color:var(--text-muted);">Loading predictions...</p>';
             try {
-                const url = `https://api.airtable.com/v0/${BETTING_BASE_ID}/Predictions?filterByFormula={Status}="Open"&maxRecords=20`;
+                const url = `https://api.airtable.com/v0/${BETTING_BASE_ID}/Predictions?filterByFormula=${encodeURIComponent('{Status}="Open"')}&maxRecords=20`;
                 const res = await fetch(url, { headers: { Authorization: `Bearer ${BETTING_TOKEN}` } });
                 const json = await res.json();
                 if (!json.records || json.records.length === 0) { feed.innerHTML = '<p style="color:var(--text-muted);">No active predictions yet.</p>'; return; }
@@ -2378,6 +2579,54 @@
         }
 
 
+        // ── TOAST NOTIFICATIONS ──
+        function showToast(msg, duration) {
+            const toast = document.getElementById('wa-toast');
+            const toastMsg = document.getElementById('wa-toast-msg');
+            if (!toast || !toastMsg) return;
+            toastMsg.innerHTML = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), duration || 3000);
+        }
+
+        // ── LIVE TICKER ──
+        async function loadLiveTicker() {
+            try {
+                // Get today's Beat Winter picks for ticker
+                const bwRes = await fetch(
+                    `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/BeatWinter?sort%5B0%5D%5Bfield%5D=GameDate&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=500`,
+                    { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
+                );
+                const bwJson = await bwRes.json();
+                const records = bwJson.records || [];
+
+                let items = [];
+                records.forEach(r => {
+                    const f = r.fields;
+                    const pick = f.WinterPick || '';
+                    const result = f.Result || 'Pending';
+                    const matchup = f.Matchup || '';
+                    const league = f.League || '';
+                    if (result === 'Win') {
+                        items.push(`<span class="ticker-item ticker-win">✓ WINTER WON — ${pick} (${league})</span>`);
+                    } else if (result === 'Loss') {
+                        items.push(`<span class="ticker-item ticker-loss">✗ ${pick} (${league})</span>`);
+                    } else if (pick) {
+                        items.push(`<span class="ticker-item"><span class="ticker-live">●</span> WINTER PICKS: ${pick} — ${matchup.split(':')[0]}</span>`);
+                    }
+                });
+
+                if (items.length > 0) {
+                    const ticker = document.getElementById('ticker-scroll-content');
+                    if (ticker) {
+                        ticker.innerHTML = items.join('') +
+                            '<span class="ticker-item" style="color:var(--ice-blue-accent);">⚡ WINTER ANALYTICS</span>' +
+                            items.join(''); // repeat for seamless loop
+                    }
+                }
+            } catch (e) { }
+        }
+
         // ── LOGOUT ──
         window.handleLogout = function () { document.body.style.opacity = '0'; setTimeout(() => { window.location.href = 'index.html'; }, 500); };
 
@@ -2402,6 +2651,9 @@
             document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
             const tabEl = document.getElementById('tab-' + sectionId);
             if (tabEl) tabEl.classList.add('active');
+            // Save last visited tab
+            localStorage.setItem('wa_last_tab', sectionId);
+            localStorage.setItem('wa_last_table', tableName);
 
             document.getElementById('dynamic-page').style.display = 'none';
             document.getElementById('portfolio-page').style.display = 'none';
@@ -2413,6 +2665,7 @@
             if (tableName === 'Portfolio') {
                 document.getElementById('portfolio-page').style.display = 'block';
                 loadBalance();
+                loadBetHistory();
                 return;
             } else if (tableName === 'Advanced AI') {
                 document.getElementById('advanced-page').style.display = 'block';
@@ -2485,7 +2738,17 @@
                 const encTitle = encodeURIComponent(f.Headline || ""), encSummary = encodeURIComponent(f.Summary || ""), encImg = encodeURIComponent(imgUrl), encLeague = encodeURIComponent(f.League || "");
                 html += `<div class="card" data-title="${encTitle}" data-img="${encImg}" data-summary="${encSummary}" data-league="${encLeague}" onclick="openDataModal(this)">
                     ${imgUrl ? `<img src="${imgUrl}" onerror="this.outerHTML='<div style=\\'width:25%;min-width:220px;background:rgba(2,6,23,0.5);border-right:1px solid rgba(255,255,255,0.1);\\'></div>'">` : `<div style="width:25%;min-width:220px;background:rgba(2,6,23,0.5);border-right:1px solid rgba(255,255,255,0.1);"></div>`}
-                    <div class="card-content"><div><h3>${f.Headline || "Update"}</h3><p class="summary-preview">${f.Summary || ""}</p></div><div class="read-more">Read Full Analysis &rarr;</div></div>
+                    <div class="card-content">
+                        <div style="margin-bottom:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+                            <span style="font-size:0.65rem;font-weight:700;color:var(--ice-blue-accent);text-transform:uppercase;letter-spacing:1px;">${f.League || ''}</span>
+                            <span style="font-size:0.65rem;font-weight:700;background:rgba(56,189,248,0.08);color:var(--ice-blue-accent);border:1px solid rgba(56,189,248,0.15);padding:2px 7px;border-radius:99px;">⚡ WINTER'S ANALYSIS</span>
+                        </div>
+                        <div><h3 style="margin:0 0 6px 0;">${f.Headline || "Update"}</h3>
+                        <p class="summary-preview">${(f.Summary || '').substring(0, 120)}...</p></div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+                            <span class="read-more">Read Full Analysis →</span>
+                        </div>
+                    </div>
                 </div>`;
             });
             feed.innerHTML = html;
@@ -2547,57 +2810,86 @@
 
         // ── SCOUTING REPORTS ──
         window.fetchScoutingReports = async function () {
-            const selectEl = document.getElementById('hot-matchup-select');
-            selectEl.innerHTML = '<option value="none">-- Syncing Global Satellite Feeds... --</option>';
-            const tables = ['Basketball', 'USMajors', 'Football', 'Motorsports', 'Combat', 'ClubCourt', 'Esports'];
-            window.scoutingData = {};
+            // Populate the deep dive matchup dropdown with today's games
+            const select = document.getElementById('hot-matchup-select');
+            if (!select) return;
             try {
-                let optionsHtml = '<option value="none">-- Select Global Matchup for Deep Analysis --</option>';
-                const fetchPromises = tables.map(async (tableName) => {
-                    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(tableName)}?sort%5B0%5D%5Bfield%5D=Created%20time&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=1`;
-                    const response = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
-                    const json = await response.json();
-                    if (json.records && json.records.length > 0) {
-                        const record = json.records[0];
-                        window.scoutingData[record.id] = { title: record.fields.Headline || "Classified Matchup", analysis: record.fields.Summary || "Data currently being compiled...", sport: tableName };
-                        return `<option value="${record.id}">🔥 [${tableName.toUpperCase()}] ${record.fields.Headline || 'Classified'}</option>`;
-                    }
-                    return '';
-                });
-                const results = await Promise.all(fetchPromises);
-                results.forEach(opt => { if (opt) optionsHtml += opt; });
-                selectEl.innerHTML = optionsHtml;
-            } catch (e) { console.error(e); selectEl.innerHTML = '<option value="none">-- Error syncing global terminal --</option>'; }
-        };
-
-        window.runTacticalSimulation = function () {
-            const selectId = document.getElementById('hot-matchup-select').value;
-            const content = document.getElementById('scout-content');
-            const board = document.getElementById('t-board');
-            board.innerHTML = '';
-            if (selectId === 'none' || !window.scoutingData[selectId]) { content.innerHTML = `<h3 style="color:var(--text-muted);text-align:center;margin-top:30px;">Select a live matchup above to initialize simulation.</h3>`; return; }
-            const data = window.scoutingData[selectId];
-            const sport = data.sport;
-            if (sport === 'Basketball') board.innerHTML += `<div style="position:absolute;top:0;bottom:0;left:0;width:120px;background:rgba(56,189,248,0.05);border-right:2px solid rgba(56,189,248,0.3);"></div><div style="position:absolute;top:10%;bottom:10%;left:0;width:200px;border:2px solid rgba(56,189,248,0.3);border-left:none;border-radius:0 100px 100px 0;"></div>`;
-            else if (sport === 'Football') board.innerHTML += `<div style="position:absolute;top:20%;bottom:20%;left:0;width:120px;border:2px solid rgba(56,189,248,0.3);border-left:none;"></div><div style="position:absolute;right:-60px;top:50%;transform:translateY(-50%);width:120px;height:120px;border-radius:50%;border:2px solid rgba(56,189,248,0.3);"></div>`;
-            else if (sport === 'Combat') board.innerHTML += `<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:180px;height:180px;background:rgba(239,68,68,0.05);border:2px solid rgba(239,68,68,0.4);clip-path:polygon(30% 0%,70% 0%,100% 30%,100% 70%,70% 100%,30% 100%,0% 70%,0% 30%);"></div>`;
-            else if (sport === 'USMajors') board.innerHTML += `<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(45deg);width:130px;height:130px;background:rgba(16,185,129,0.05);border:2px solid rgba(16,185,129,0.4);"></div>`;
-            else if (sport === 'Esports') board.innerHTML += `<div style="position:absolute;top:15%;left:10%;width:80%;height:2px;background:rgba(139,92,246,0.4);transform:rotate(15deg);"></div><div style="position:absolute;top:50%;left:10%;width:80%;height:2px;background:rgba(139,92,246,0.4);"></div><div style="position:absolute;top:85%;left:10%;width:80%;height:2px;background:rgba(139,92,246,0.4);transform:rotate(-15deg);"></div>`;
-            else if (sport === 'Motorsports') board.innerHTML += `<div style="position:absolute;top:20%;left:20%;width:60%;height:60%;border:4px dashed rgba(250,204,21,0.4);border-radius:50px 100px 50px 10px;"></div>`;
-            else if (sport === 'ClubCourt') board.innerHTML += `<div style="position:absolute;top:20%;bottom:20%;left:15%;right:15%;border:2px solid rgba(56,189,248,0.3);"></div><div style="position:absolute;top:20%;bottom:20%;left:50%;width:2px;background:rgba(56,189,248,0.3);"></div><div style="position:absolute;top:50%;left:15%;right:15%;height:2px;background:rgba(56,189,248,0.3);"></div>`;
-            let fa = data.analysis;
-            fa = fa.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/^[\*\-]\s+(.*)$/gm, '&bull; $1').replace(/\n/g, '<br><br>');
-            content.innerHTML = `<h3 style="color:var(--ice-blue-accent);font-size:1.3rem;">${data.title}</h3><div style="color:var(--profit-green);font-size:0.8rem;text-transform:uppercase;font-weight:bold;margin-bottom:10px;">► Tactical AI Assessment Complete</div><div style="color:#cbd5e1;font-size:0.95rem;line-height:1.8;">${fa}</div>`;
-            setTimeout(() => {
-                for (let i = 0; i < 5; i++) {
-                    let x = document.createElement('div'); x.className = 'tac-x'; x.innerText = 'X'; x.style.left = Math.floor(Math.random() * 40 + 10) + '%'; x.style.top = Math.floor(Math.random() * 80 + 10) + '%'; board.appendChild(x);
-                    let o = document.createElement('div'); o.className = 'tac-o'; o.innerText = 'O'; o.style.left = Math.floor(Math.random() * 40 + 30) + '%'; o.style.top = Math.floor(Math.random() * 80 + 10) + '%'; board.appendChild(o);
+                // Get all sports tables and combine matchups
+                const tables = ['Basketball', 'USMajors', 'Football', 'Motorsports', 'Combat', 'ClubCourt', 'Esports'];
+                let allMatchups = [];
+                for (const table of tables) {
+                    try {
+                        const res = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(table)}?fields%5B%5D=Headline&fields%5B%5D=League&maxRecords=30`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+                        const json = await res.json();
+                        if (json.records) {
+                            json.records.forEach(r => {
+                                const headline = r.fields.Headline || '';
+                                const league = r.fields.League || table;
+                                // Extract matchup part (before colon)
+                                const matchup = headline.split(':')[0].trim();
+                                if (matchup && matchup.match(/ vs | @ /i)) {
+                                    allMatchups.push({ matchup, league, headline });
+                                }
+                            });
+                        }
+                    } catch (e) { }
                 }
-                let arrow = document.createElement('div'); arrow.className = 'tac-arrow'; arrow.style.left = '40%'; arrow.style.top = '50%'; arrow.style.width = '120px'; arrow.style.transform = 'rotate(-15deg)'; board.appendChild(arrow);
-            }, 300);
-        };
+                select.innerHTML = '<option value="none">-- Select today's matchup--</option > ';
+                allMatchups.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = JSON.stringify({ matchup: m.matchup, league: m.league });
+                    opt.textContent = `[${m.league}] ${m.matchup}`;
+                    select.appendChild(opt);
+                });
+                console.log('Deep Dive: loaded ' + allMatchups.length + ' matchups');
+            } catch (e) {
+                console.log('Deep Dive load error:', e);
+            }
+        }
 
-        // ── CHATBOT ──
+        window.runTacticalSimulation = function () { }; // Legacy stub
+
+        window.runDeepDive = async function (val) {
+            if (!val || val === 'none') return;
+            const content = document.getElementById('scout-content');
+            let matchup = val, league = '';
+            try {
+                const parsed = JSON.parse(val);
+                matchup = parsed.matchup;
+                league = parsed.league;
+            } catch (e) { }
+
+            content.innerHTML = `<div style="text-align:center;padding:40px 20px;">
+                <div style="font-size:1.5rem;margin-bottom:12px;animation:pulse 1s infinite;">⚡</div>
+                <div style="color:var(--ice-blue-accent);font-weight:600;">Winter is analyzing...</div>
+                <div style="color:var(--text-muted);font-size:0.8rem;margin-top:6px;">${matchup}</div>
+            </div>`;
+
+            try {
+                const prompt = `Deep dive analysis: ${matchup} (${league}). Give me: current form, key injuries, head-to-head record, betting line, and your verdict. Be sharp and concise.`;
+                const res = await fetch('https://hook.us2.make.com/cz98rcn27nxv4r426z4mfekjitkuadjs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: prompt, history: '', user_id: USER_ID })
+                });
+                const text = await res.text();
+                // Format the response nicely
+                const formatted = text
+                    .replace(/\*\*([^*]+)\*\*/g, '<strong style="color:var(--ice-blue-accent);">$1</strong>')
+                    .replace(/WINTER'S VERDICT[:\s]*/gi, '<div style="margin-top:16px;padding:12px;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.2);border-radius:8px;"><strong style="color:var(--ice-blue-accent);">⚡ WINTER\'S VERDICT:</strong> ')
+                    .replace(/WINTER'S TAKE[:\s]*/gi, '<div style="margin-top:12px;padding:10px;background:rgba(56,189,248,0.06);border-left:3px solid var(--ice-blue-accent);padding-left:12px;"><strong style="color:var(--ice-blue-accent);">WINTER\'S TAKE:</strong> ')
+                    .replace(/\n\n/g, '</p><p style="margin:10px 0;">')
+                    .replace(/\n/g, '<br>');
+                content.innerHTML = `<div style="font-size:0.88rem;line-height:1.8;color:var(--text-main);">
+                    <div style="font-size:0.7rem;color:var(--ice-blue-accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-weight:700;">[${league}] Deep Dive</div>
+                    <div style="font-size:1rem;font-weight:700;color:var(--text-main);margin-bottom:16px;">${matchup}</div>
+                    <p style="margin:0 0 10px 0;">${formatted}</p>
+                </div>`;
+            } catch (e) {
+                content.innerHTML = `<div style="color:var(--loss-red);padding:20px;">Error loading analysis. Winter is busy.</div>`;
+            }
+        }
+
         window.sendMockMessage = async function () {
             const input = document.querySelector('.chat-input');
             const msg = input.value.trim();
@@ -2742,10 +3034,13 @@
                 document.getElementById('bw-pending').innerText = pending;
                 let html = '';
                 json.records.filter(r => r.fields.Result !== 'Archived').forEach(r => {
-                    const f = r.fields, result = f.Result || 'Pending', conf = (f.Confidence || 'Medium').toLowerCase();
+                    const f = r.fields;
+                    const hasScore = f.ActualScore && f.ActualScore !== '';
+                    const result = f.Result || (hasScore ? 'Checking' : 'Pending');
+                    const conf = (f.Confidence || 'Medium').toLowerCase();
                     const cardClass = result === 'Win' ? 'winter-correct' : result === 'Loss' ? 'winter-wrong' : 'pending';
                     const badgeClass = result === 'Win' ? 'badge-win' : result === 'Loss' ? 'badge-loss' : 'badge-pending';
-                    const badgeLabel = result === 'Win' ? '✓ Winter Won' : result === 'Loss' ? '✗ Winter Lost' : '⏳ Pending';
+                    const badgeLabel = result === 'Win' ? '🔥 Winter Won' : result === 'Loss' ? '💀 Winter Lost' : result === 'Checking' ? '🔄 Verifying...' : '⏳ Pending';
                     const confClass = conf === 'high' ? 'conf-high' : conf === 'medium' ? 'conf-medium' : 'conf-low';
                     const confLabel = conf === 'high' ? '🔥 High Confidence' : conf === 'medium' ? '⚡ Medium Confidence' : '📊 Low Confidence';
                     html += `<div class="bw-card ${cardClass}"><div class="bw-matchup"><div class="bw-league">${f.League || 'Sports'}</div><div class="bw-title">${f.Matchup || 'Matchup TBD'}</div><div class="bw-pick">Winter's Pick: <strong>${f.WinterPick || 'TBD'}</strong></div>${f.GameDate ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:3px;">${f.GameDate}</div>` : ''}</div><div class="bw-result"><span class="bw-badge ${badgeClass}">${badgeLabel}</span>${f.ActualScore ? `<div class="bw-score">Final: ${f.ActualScore}</div>` : ''}<div class="bw-confidence ${confClass}">${confLabel}</div></div></div>`;
@@ -2780,7 +3075,14 @@
         }
 
         // ── INIT ──
-        window.nav('basketball', 'Basketball');
+        // Restore last visited tab
+        const lastTab = localStorage.getItem('wa_last_tab');
+        const lastTable = localStorage.getItem('wa_last_table');
+        if (lastTab && lastTable) {
+            window.nav(lastTab, lastTable);
+        } else {
+            window.nav('basketball', 'Basketball');
+        }
         loadBalance();
     </script>
 </body>
