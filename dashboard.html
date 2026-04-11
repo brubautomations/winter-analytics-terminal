@@ -2200,7 +2200,7 @@
             const feed = document.getElementById('bet-history-feed');
             if (!feed) return;
             try {
-                const url = `https://api.airtable.com/v0/${BETTING_BASE_ID}/Bets?filterByFormula=${encodeURIComponent('{UserID}="' + USER_ID + '"')}&sort%5B0%5D%5Bfield%5D=Created%20time&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=20`;
+                const url = `https://api.airtable.com/v0/${BETTING_BASE_ID}/Bets?filterByFormula=${encodeURIComponent('{User}="' + USER_ID + '"')}&sort%5B0%5D%5Bfield%5D=Created+time&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=20`;
                 const res = await fetch(url, { headers: { Authorization: `Bearer ${BETTING_TOKEN}` } });
                 const json = await res.json();
                 if (!json.records || json.records.length === 0) {
@@ -2210,15 +2210,18 @@
                 feed.innerHTML = json.records.map(r => {
                     const f = r.fields;
                     const status = f.Status || 'Pending';
-                    const statusColor = status === 'Won' ? 'var(--profit-green)' : status === 'Lost' ? 'var(--loss-red)' : 'var(--ice-blue-accent)';
-                    const payout = f.Payout ? `+₱${parseFloat(f.Payout).toLocaleString('en-PH')}` : '';
-                    return `<div style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;">
-                        <div>
-                            <div style="font-size:0.85rem;font-weight:600;color:var(--text-main);margin-bottom:3px;">${f.Description || 'Bet'}</div>
-                            <div style="font-size:0.75rem;color:var(--text-muted);">${f.Type || 'Sports'} · Odds ${parseFloat(f.Odds || 1).toFixed(2)}x · ${f.GameDate || ''}</div>
+                    const statusColor = status === 'Won' ? 'var(--profit-green)' : status === 'Lost' ? 'var(--loss-red,#ef4444)' : 'var(--ice-blue-accent)';
+                    const statusEmoji = status === 'Won' ? '🏆' : status === 'Lost' ? '💀' : '⏳';
+                    const payout = f.Payout && status === 'Won' ? `+₱${parseFloat(f.Payout).toLocaleString('en-PH')}` : '';
+                    const game = f.Game || f.Description || 'Bet';
+                    const desc = f.Description || '';
+                    return `<div style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:0.85rem;font-weight:600;color:var(--text-main);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${desc || game}</div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);">${f.Type || 'Sports'} · Odds ${parseFloat(f.Odds || 1.9).toFixed(2)}x</div>
                         </div>
-                        <div style="text-align:right;">
-                            <div style="font-size:0.9rem;font-weight:700;color:${statusColor};">${status}</div>
+                        <div style="text-align:right;white-space:nowrap;">
+                            <div style="font-size:0.9rem;font-weight:700;color:${statusColor};">${statusEmoji} ${status}</div>
                             <div style="font-size:0.8rem;color:var(--text-muted);">₱${parseFloat(f.Amount || 0).toLocaleString('en-PH')} ${payout}</div>
                         </div>
                     </div>`;
@@ -2369,14 +2372,14 @@
                         body: JSON.stringify({
                             records: [{
                                 fields: {
-                                    UserID: USER_ID,
+                                    User: USER_ID,
                                     Description: 'Bet on ' + teamName,
                                     Amount: amount,
                                     Odds: odds,
                                     Payout: payout,
                                     Status: 'Pending',
                                     Type: 'Sports',
-                                    GameDate: new Date().toISOString().split('T')[0]
+                                    Game: teamName
                                 }
                             }]
                         })
@@ -2554,11 +2557,11 @@
                     body: JSON.stringify({
                         records: [{
                             fields: {
-                                UserID: USER_ID,
+                                User: USER_ID,
                                 Description: `Predict ${bet.side}: ${question.substring(0, 50)}`,
                                 Amount: amount, Odds: parseFloat(bet.odds), Payout: payout,
                                 Status: 'Pending', Type: 'Prediction',
-                                GameDate: new Date().toISOString().split('T')[0]
+                                Game: question.substring(0, 60)
                             }
                         }]
                     })
