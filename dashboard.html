@@ -2450,7 +2450,14 @@
                         <div style="font-weight:700;color:var(--profit-green);margin-bottom:4px;">Bet Placed!</div>
                         <div style="font-size:0.85rem;color:var(--text-muted);">₱${amount.toLocaleString()} on ${teamName}</div>
                         <div style="font-size:0.85rem;color:var(--ice-blue-accent);">Potential win: ₱${payout.toLocaleString()}</div>
+                        <div style="font-size:0.8rem;color:var(--text-muted);margin-top:8px;">You already have a bet on this game.</div>
                     </div>`;
+                // Lock BOTH bet buttons for this game — can't bet same game twice
+                document.getElementById('btn-bet-a').disabled = true;
+                document.getElementById('btn-bet-a').style.opacity = '0.3';
+                document.getElementById('btn-bet-b').disabled = true;
+                document.getElementById('btn-bet-b').style.opacity = '0.3';
+                btn.innerText = '✓ CONFIRM BET'; btn.disabled = false;
             } else { btn.innerText = '✓ Confirm Bet'; btn.disabled = false; }
         }
 
