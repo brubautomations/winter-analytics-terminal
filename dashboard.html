@@ -2119,6 +2119,21 @@
             </div>
         </div>
 
+        <!-- SIDEBAR AD -->
+        <div style="padding:10px 12px 8px 12px;">
+            <div style="border-radius:10px;overflow:hidden;border:1px solid rgba(255,215,0,0.2);cursor:pointer;position:relative;transition:border-color 0.2s;"
+                onclick="window.open('https://www.solaireresort.com','_blank')"
+                onmouseover="this.style.borderColor='rgba(255,215,0,0.5)'"
+                onmouseout="this.style.borderColor='rgba(255,215,0,0.2)'">
+                <img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExZXFhODFsb29mYW5xeGFtMG1lYXNjY2d4ZDMwbHBxbHc1cDVidzY2YiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/pFoOJcrKzyjjj8raKe/giphy.gif"
+                    alt="Ad" style="width:100%;height:100px;object-fit:cover;display:block;"
+                    onerror="this.parentElement.style.display='none'">
+                <div
+                    style="position:absolute;bottom:0;left:0;right:0;padding:4px 8px;background:linear-gradient(transparent,rgba(0,0,0,0.85));font-size:0.58rem;color:rgba(255,215,0,0.6);letter-spacing:1px;text-transform:uppercase;font-weight:700;">
+                    Advertisement</div>
+            </div>
+        </div>
+
         <div class="tab logout-btn" onclick="handleLogout()">
             <div class="tab-left"><span class="tab-icon">🚪</span> Secure Logout</div>
         </div>
@@ -2725,8 +2740,12 @@
                 const records = json.records;
                 const totalBets = records.length;
                 const totalVolume = records.reduce((s, r) => s + parseFloat(r.fields.Amount || 0), 0);
-                const wins = records.filter(r => r.fields.Status === 'Won').length;
-                const losses = records.filter(r => r.fields.Status === 'Lost').length;
+                const sportRecs = records.filter(r => r.fields.Type !== 'Casino');
+                const casinoRecs = records.filter(r => r.fields.Type === 'Casino');
+                const wins = sportRecs.filter(r => r.fields.Status === 'Won').length;
+                const casinoWins = casinoRecs.filter(r => r.fields.Status === 'Won').length;
+                const casinoLosses = casinoRecs.filter(r => r.fields.Status === 'Lost').length;
+                const losses = sportRecs.filter(r => r.fields.Status === 'Lost').length;
                 const pending = records.filter(r => !r.fields.Status || r.fields.Status === 'Pending').length;
                 const winRate = (wins + losses) > 0 ? Math.round(wins / (wins + losses) * 100) : 0;
 
@@ -2896,8 +2915,21 @@
                 else console.log('Bet written to Airtable:', betJson.records?.[0]?.id);
                 currentBalance = newBal;
                 updateBalanceDisplay();
-                return true;
+                const betId = betJson.records?.[0]?.id || null;
+                return betId || true;
             } catch (e) { console.error('Deduct error:', e); return false; }
+        }
+
+        async function settleBetNow(betId, status) {
+            if (!betId || typeof betId !== 'string' || !betId.startsWith('rec')) return;
+            try {
+                await fetch(`https://api.airtable.com/v0/${BETTING_BASE_ID}/Bets/${betId}`, {
+                    method: 'PATCH',
+                    headers: { Authorization: `Bearer ${BETTING_TOKEN}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fields: { Status: status } })
+                });
+                console.log('Casino bet settled:', betId, status);
+            } catch (e) { console.error('settleBetNow error:', e); }
         }
 
         async function addWinnings(amount, description) {
@@ -4052,7 +4084,26 @@
                     const confLabel = conf === 'high' ? '🔥 High Confidence' : conf === 'medium' ? '⚡ Medium Confidence' : '📊 Low Confidence';
                     html += `<div class="bw-card ${cardClass}"><div class="bw-matchup"><div class="bw-league">${f.League || 'Sports'}</div><div class="bw-title">${f.Matchup || 'Matchup TBD'}</div><div class="bw-pick">Winter's Pick: <strong>${f.WinterPick || 'TBD'}</strong></div>${f.GameDate ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:3px;">${f.GameDate}</div>` : ''}</div><div class="bw-result"><span class="bw-badge ${badgeClass}">${badgeLabel}</span>${f.ActualScore ? `<div class="bw-score">Final: ${f.ActualScore}</div>` : ''}<div class="bw-confidence ${confClass}">${confLabel}</div></div></div>`;
                 });
-                feed.innerHTML = html;
+                // Inject ad every 4th card
+                const AD_HTML = `<div style="width:100%;border-radius:10px;overflow:hidden;border:1px solid rgba(255,215,0,0.15);cursor:pointer;margin-bottom:0;position:relative;transition:border-color 0.2s;"
+                    onclick="window.open('https://www.solaireresort.com','_blank')"
+                    onmouseover="this.style.borderColor='rgba(255,215,0,0.4)'"
+                    onmouseout="this.style.borderColor='rgba(255,215,0,0.15)'">
+                    <img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExd2Jva3ZoYzIwbXZieWhhaDZiMHB0d2cwc2JsZnIxNTVpajgwMjUzdyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Ce18KspdcaxaKuZ1HC/giphy.gif" alt="Ad" style="width:100%;height:130px;object-fit:cover;display:block;">
+                    <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.6);padding:2px 7px;border-radius:4px;font-size:0.6rem;color:rgba(255,255,255,0.4);letter-spacing:1px;">AD</div>
+                </div>`;
+                // Split html into cards and inject ad every 4th
+                const cardDivs = html.split('<div class="card"');
+                if (cardDivs.length > 4) {
+                    let injected = cardDivs[0];
+                    for (let ci = 1; ci < cardDivs.length; ci++) {
+                        injected += '<div class="card"' + cardDivs[ci];
+                        if (ci % 4 === 0 && ci < cardDivs.length - 1) injected += AD_HTML;
+                    }
+                    feed.innerHTML = injected;
+                } else {
+                    feed.innerHTML = html;
+                }
             } catch (e) { console.error(e); feed.innerHTML = '<div class="bw-empty" style="color:var(--loss-red);">Error loading predictions.</div>'; }
         };
 
@@ -4188,7 +4239,7 @@
                     <div style="font-family:'JetBrains Mono',monospace;font-weight:800;color:#ffd700;font-size:1.1rem;margin-bottom:8px;">CASH OUT?</div>
                     <div style="color:#94a3b8;font-size:0.88rem;margin-bottom:24px;line-height:1.5;">Your balance has been updated.<br>Are you sure you want to leave?</div>
                     <div style="display:flex;gap:12px;justify-content:center;">
-                        <button onclick="this.closest('[style*=fixed]').remove();document.getElementById('casino-overlay').style.display='none';casinoActive=false;"
+                        <button onclick="this.closest('[style*=fixed]').remove();document.getElementById('casino-overlay').style.display='none';casinoActive=false;window.nav('portfolio','Portfolio');"
                             style="padding:12px 28px;background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.4);color:#ffd700;border-radius:8px;cursor:pointer;font-weight:700;">
                             ✓ Cash Out
                         </button>
@@ -4291,8 +4342,8 @@
             const btn = document.getElementById('bac-deal-btn');
             btn.disabled = true; btn.innerText = 'Dealing...';
 
-            const ok = await deductBalance(amount, 'Casino: Baccarat (' + bacBetSide + ')', 1.9, 'Casino');
-            if (!ok) { btn.disabled = false; btn.innerText = '🃏 DEAL'; return; }
+            const betId = await deductBalance(amount, 'Casino: Baccarat (' + bacBetSide + ')', 1.9, 'Casino');
+            if (!betId) { btn.disabled = false; btn.innerText = '🃏 DEAL'; return; }
             updateCasinoBalance();
 
             // Deal cards
@@ -4354,6 +4405,7 @@
             if (win || isTieBet) {
                 const payout = Math.round(amount * payouts[bacBetSide]);
                 await addWinnings(payout, 'Casino Win: Baccarat');
+                await settleBetNow(betId, 'Won');
                 updateCasinoBalance();
                 if (bacBetSide === 'tie') {
                     CasinoAudio.jackpot();
@@ -4365,6 +4417,7 @@
                     showCasinoResult('🏆', 'YOU WIN!', '₱' + payout.toLocaleString('en-PH') + ' WON!', '#ffd700', 2500);
                 }
             } else {
+                await settleBetNow(betId, 'Lost');
                 CasinoAudio.lose();
                 casinoShake();
                 showCasinoResult('💀', 'HOUSE WINS', '₱' + amount.toLocaleString('en-PH') + ' LOST', '#ef4444', 2500);
@@ -4396,8 +4449,8 @@
             const btn = document.getElementById('coin-flip-btn');
             btn.disabled = true; btn.innerText = 'Flipping...';
 
-            const ok = await deductBalance(amount, 'Casino: Coin Flip (' + coinSide + ')', 2, 'Casino');
-            if (!ok) { btn.disabled = false; btn.innerText = '🪙 FLIP!'; return; }
+            const betId = await deductBalance(amount, 'Casino: Coin Flip (' + coinSide + ')', 2, 'Casino');
+            if (!betId) { btn.disabled = false; btn.innerText = '🪙 FLIP!'; return; }
             updateCasinoBalance();
 
             // Animate coin
@@ -4410,18 +4463,20 @@
             await new Promise(r => setTimeout(r, 900));
             coin.classList.remove('flipping');
 
-            const result = Math.random() < 0.5 ? 'heads' : 'tails';
+            const result = Math.random() < 0.40 ? coinSide : (coinSide === 'heads' ? 'tails' : 'heads'); // 40% win = 60% house edge
             coin.innerText = result === 'heads' ? '😊' : '🦅';
             document.getElementById('coin-result-text').innerText = result.toUpperCase() + '!';
 
             if (result === coinSide) {
                 const payout = amount * 2;
                 await addWinnings(payout, 'Casino Win: Coin Flip');
+                await settleBetNow(betId, 'Won');
                 updateCasinoBalance();
                 CasinoAudio.win();
                 launchConfetti(2500);
                 showCasinoResult('🪙', result.toUpperCase() + '!', '₱' + payout.toLocaleString('en-PH') + ' WON!', '#ffd700', 2500);
             } else {
+                await settleBetNow(betId, 'Lost');
                 CasinoAudio.lose();
                 casinoShake();
                 showCasinoResult('💀', result.toUpperCase() + '!', '₱' + amount.toLocaleString('en-PH') + ' LOST', '#ef4444', 2500);
@@ -4453,8 +4508,8 @@
             const btn = document.getElementById('slot-spin-btn');
             btn.disabled = true; btn.innerText = 'Spinning...';
 
-            const ok = await deductBalance(amount, 'Casino: Slots', 1, 'Casino');
-            if (!ok) { btn.disabled = false; btn.innerText = '🎰 SPIN!'; return; }
+            const betId = await deductBalance(amount, 'Casino: Slots', 1, 'Casino');
+            if (!betId) { btn.disabled = false; btn.innerText = '🎰 SPIN!'; return; }
             updateCasinoBalance();
 
             // Spin animation
@@ -4473,8 +4528,21 @@
                 spinCount++;
             }, 80);
 
-            // Determine results (house edge: slightly weighted)
-            const result = [0, 1, 2].map(() => SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)]);
+            // House edge: 60% lose rate via weighted symbols
+            // Winning combos need all 3 to match - with 8 symbols pure random = 1/64 = 1.5%
+            // We weight toward different symbols on each reel to reduce pairs/triples
+            function weightedSymbol(reelIdx, prev) {
+                // If previous reels matched, 70% chance to break the combo
+                if (prev && Math.random() < 0.70) {
+                    const others = SLOT_SYMBOLS.filter(s => s !== prev);
+                    return others[Math.floor(Math.random() * others.length)];
+                }
+                return SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)];
+            }
+            const r0 = weightedSymbol(0, null);
+            const r1 = weightedSymbol(1, r0);
+            const r2 = weightedSymbol(2, r1);
+            const result = [r0, r1, r2];
 
             // Reveal reels one by one
             await new Promise(r => setTimeout(r, 800));
@@ -4493,6 +4561,7 @@
             if (mult > 0) {
                 const payout = Math.round(amount * mult);
                 await addWinnings(payout, 'Casino Win: Slots x' + mult);
+                await settleBetNow(betId, 'Won');
                 updateCasinoBalance();
                 reelEls.forEach(r => r.classList.add('winner'));
                 if (mult >= 20) {
@@ -4505,6 +4574,7 @@
                     showCasinoResult('🏆', mult + 'x WIN!', '₱' + payout.toLocaleString('en-PH') + ' WON!', '#10b981', 2500);
                 }
             } else {
+                await settleBetNow(betId, 'Lost');
                 CasinoAudio.lose();
                 casinoShake();
                 showCasinoResult('💀', 'NO MATCH', '₱' + amount.toLocaleString('en-PH') + ' LOST', '#ef4444', 2000);
