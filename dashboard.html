@@ -2216,6 +2216,58 @@
                 <div class="brag-box"><button class="btn-brag" onclick="sharePortfolio()" id="share-btn">📲 Share on
                         Social</button></div>
 
+                <!-- PREDICTION STATS WIDGET -->
+                <div id="predict-stats-widget" style="
+                    background: rgba(167,139,250,0.06);
+                    border: 1px solid rgba(167,139,250,0.2);
+                    border-radius: 12px;
+                    padding: 16px 20px;
+                    margin-top: 4px;
+                    grid-column: 1 / -1;
+                ">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                        <div
+                            style="font-size:0.72rem;color:#c4b5fd;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;">
+                            🔮 Prediction Market Stats</div>
+                        <div id="predict-stats-refresh" style="font-size:0.68rem;color:#475569;cursor:pointer;"
+                            onclick="loadPredictionStats()">↻ Refresh</div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+                        <div style="text-align:center;">
+                            <div
+                                style="font-size:0.68rem;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">
+                                Placed</div>
+                            <div id="ps-placed"
+                                style="font-size:1.4rem;font-weight:700;color:#c4b5fd;font-family:'JetBrains Mono',monospace;">
+                                --</div>
+                        </div>
+                        <div style="text-align:center;">
+                            <div
+                                style="font-size:0.68rem;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">
+                                At Stake</div>
+                            <div id="ps-stake"
+                                style="font-size:1.4rem;font-weight:700;color:#fbbf24;font-family:'JetBrains Mono',monospace;">
+                                --</div>
+                        </div>
+                        <div style="text-align:center;">
+                            <div
+                                style="font-size:0.68rem;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">
+                                Best Odds Won</div>
+                            <div id="ps-best"
+                                style="font-size:1.4rem;font-weight:700;color:#10b981;font-family:'JetBrains Mono',monospace;">
+                                --</div>
+                        </div>
+                        <div style="text-align:center;">
+                            <div
+                                style="font-size:0.68rem;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">
+                                Biggest L</div>
+                            <div id="ps-loss"
+                                style="font-size:1.4rem;font-weight:700;color:#ef4444;font-family:'JetBrains Mono',monospace;">
+                                --</div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- BET HISTORY -->
                 <div style="margin-top:24px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
@@ -2728,6 +2780,7 @@
                 const json = await res.json();
                 if (!json.records || json.records.length === 0) {
                     feed.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;">No bets yet. Place your first bet!</p>';
+                    loadPredictionStats();
                     // Reset stats
                     ['stat-total-bets', 'stat-wins', 'stat-losses', 'stat-winrate'].forEach(id => {
                         const el = document.getElementById(id);
@@ -2822,6 +2875,7 @@
                         </div>
                     </div>`;
                 }).join('');
+                loadPredictionStats();
             } catch (e) {
                 console.error('loadBetHistory error:', e);
                 feed.innerHTML = '<p style="color:#94a3b8;">Could not load bet history.</p>';
@@ -3165,6 +3219,37 @@
             }
         }
 
+
+        // ── PREDICTION STATS WIDGET ──
+        async function loadPredictionStats() {
+            try {
+                const formula = encodeURIComponent(`AND({User}="${USER_ID}",{Type}="Prediction")`);
+                const url = `https://api.airtable.com/v0/${BETTING_BASE_ID}/Bets?filterByFormula=${formula}&maxRecords=500`;
+                const res = await fetch(url, { headers: { Authorization: `Bearer ${BETTING_TOKEN}` } });
+                const json = await res.json();
+                const recs = json.records || [];
+
+                const placed = recs.length;
+                const atStake = recs
+                    .filter(r => r.fields.Status === 'Pending')
+                    .reduce((s, r) => s + parseFloat(r.fields.Amount || 0), 0);
+                const wonRecs = recs.filter(r => r.fields.Status === 'Won');
+                const bestOdds = wonRecs.length > 0
+                    ? Math.max(...wonRecs.map(r => parseFloat(r.fields.Odds || 0)))
+                    : 0;
+                const lostRecs = recs.filter(r => r.fields.Status === 'Lost');
+                const biggestL = lostRecs.length > 0
+                    ? Math.max(...lostRecs.map(r => parseFloat(r.fields.Amount || 0)))
+                    : 0;
+
+                document.getElementById('ps-placed').innerText = placed || '0';
+                document.getElementById('ps-stake').innerText = atStake > 0 ? '₱' + atStake.toLocaleString('en-PH') : '₱0';
+                document.getElementById('ps-best').innerText = bestOdds > 0 ? bestOdds.toFixed(2) + 'x' : '--';
+                document.getElementById('ps-loss').innerText = biggestL > 0 ? '₱' + biggestL.toLocaleString('en-PH') : '--';
+            } catch (e) {
+                console.error('Prediction stats error:', e);
+            }
+        }
 
         window._predictBets = {};
 
