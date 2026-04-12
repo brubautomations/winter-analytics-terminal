@@ -2387,7 +2387,8 @@
                                 Amount: amount,
                                 Odds: odds || 1.9,
                                 Payout: Math.round(amount * (odds || 1.9)),
-                                Status: 'Pending'
+                                Status: 'Pending',
+                                BetDate: new Date(Date.now() - 13 * 3600000).toISOString().split('T')[0]
                             }
                         }], typecast: true
                     })
