@@ -448,6 +448,7 @@
         /* ─── MAIN CONTAINER ─── */
         .main {
             flex: 1;
+            min-width: 0;
             margin-top: 60px;
             height: calc(100vh - 60px);
             overflow-y: auto;
@@ -1586,6 +1587,289 @@
             color: #ef4444;
         }
 
+        /* ═══════════════════════════════════════════
+           RESPONSIVE — DESKTOP SCALING
+        ═══════════════════════════════════════════ */
+        @media (max-width: 1280px) {
+            .sidebar {
+                width: 220px;
+                min-width: 220px;
+            }
+
+            .main {
+                padding: 24px 24px;
+            }
+
+            .portfolio-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 1100px) {
+            .sidebar {
+                width: 200px;
+                min-width: 200px;
+                padding: 16px 10px;
+            }
+
+            .tab {
+                font-size: 0.82rem;
+                padding: 9px 10px;
+            }
+
+            .main {
+                padding: 20px 18px;
+            }
+
+            .advanced-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                flex-direction: column;
+            }
+
+            .card img {
+                width: 100%;
+                max-height: 180px;
+                object-fit: cover;
+            }
+        }
+
+        /* ═══════════════════════════════════════════
+           RESPONSIVE — TABLET (768-1024px)
+        ═══════════════════════════════════════════ */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 64px;
+                min-width: 64px;
+                padding: 16px 8px;
+                overflow: hidden;
+            }
+
+            .sidebar-section-label {
+                display: none;
+            }
+
+            .tab-label {
+                display: none;
+            }
+
+            .tab {
+                justify-content: center;
+                padding: 10px;
+            }
+
+            .tab-icon {
+                font-size: 1.2rem;
+                margin: 0;
+            }
+
+            .tab-badge {
+                display: none;
+            }
+
+            .logo-mark {
+                margin: 0 auto;
+            }
+
+            h1.brand-text {
+                display: none;
+            }
+
+            .main {
+                padding: 20px 16px;
+            }
+
+            .portfolio-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* ═══════════════════════════════════════════
+           RESPONSIVE — MOBILE (<768px)
+           Bottom tab navigation, full-width content
+        ═══════════════════════════════════════════ */
+        @media (max-width: 767px) {
+            body {
+                flex-direction: column;
+            }
+
+            /* Hide desktop sidebar completely */
+            .sidebar {
+                display: none !important;
+            }
+
+            /* Header adjustments */
+            header {
+                padding: 0 16px;
+                height: 52px;
+            }
+
+            h1 {
+                font-size: 0.9rem !important;
+                letter-spacing: 2px;
+            }
+
+            .header-center {
+                display: none;
+            }
+
+            .balance-amount {
+                font-size: 0.85rem !important;
+            }
+
+            /* Main content full width */
+            .main {
+                margin-top: 52px;
+                height: calc(100vh - 52px - 64px);
+                /* header + bottom nav */
+                padding: 16px 14px;
+                padding-bottom: 80px;
+            }
+
+            /* Bottom tab bar */
+            .mobile-nav {
+                display: flex !important;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 64px;
+                background: rgba(8, 15, 31, 0.98);
+                border-top: 1px solid rgba(255, 255, 255, 0.08);
+                backdrop-filter: blur(20px);
+                z-index: 1000;
+                align-items: center;
+                justify-content: space-around;
+                padding: 0 8px;
+            }
+
+            .mobile-nav-btn {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 3px;
+                padding: 8px 12px;
+                border-radius: 10px;
+                cursor: pointer;
+                transition: all 0.2s;
+                font-size: 0.6rem;
+                color: var(--text-muted);
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                min-width: 52px;
+                text-align: center;
+                border: none;
+                background: none;
+            }
+
+            .mobile-nav-btn.active {
+                color: var(--ice-blue-accent);
+            }
+
+            .mobile-nav-btn .mnav-icon {
+                font-size: 1.3rem;
+            }
+
+            /* Cards stack vertically */
+            .card {
+                flex-direction: column;
+            }
+
+            .card img {
+                width: 100%;
+                max-height: 160px;
+                object-fit: cover;
+                border-right: none !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            }
+
+            /* Portfolio */
+            .portfolio-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .brag-box {
+                grid-column: 1 / -1;
+            }
+
+            /* Beat Winter record */
+            .bw-record {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .bw-stat {
+                min-width: calc(50% - 8px);
+            }
+
+            /* Advanced AI */
+            .advanced-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chat-messages {
+                height: 260px;
+            }
+
+            /* Predict */
+            .predict-feed {
+                padding-bottom: 80px;
+            }
+
+            /* Sub tabs */
+            .sub-tabs {
+                overflow-x: auto;
+                white-space: nowrap;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+
+            .sub-tabs::-webkit-scrollbar {
+                display: none;
+            }
+
+            /* Toast position */
+            #wa-toast {
+                bottom: 80px;
+                right: 14px;
+                max-width: 280px;
+            }
+
+            /* Article modal — sheet from bottom on mobile */
+            .modal-overlay {
+                align-items: flex-end !important;
+                padding: 0 !important;
+            }
+
+            .modal-content {
+                max-width: 100% !important;
+                width: 100% !important;
+                max-height: 88vh !important;
+                border-radius: 20px 20px 0 0 !important;
+                border-left: none !important;
+                border-right: none !important;
+                border-bottom: none !important;
+            }
+        }
+
+        /* Hide mobile nav on desktop */
+        .mobile-nav {
+            display: none;
+        }
+
         /* ─── MONEY RAIN EASTER EGG ─── */
         .money-fire-drop {
             position: fixed;
@@ -2151,6 +2435,31 @@
             <div id="deposit-status" style="margin-top:12px;text-align:center;font-size:0.85rem;min-height:20px;"></div>
         </div>
     </div>
+
+    <!-- ═══ MOBILE BOTTOM NAV ═══ -->
+    <nav class="mobile-nav" id="mobile-nav">
+        <button class="mobile-nav-btn active" onclick="mobileNav('basketball','Basketball',this)">
+            <span class="mnav-icon">🏀</span>Ball
+        </button>
+        <button class="mobile-nav-btn" onclick="mobileNav('usmajors','US Majors',this)">
+            <span class="mnav-icon">⚾</span>Majors
+        </button>
+        <button class="mobile-nav-btn" onclick="mobileNav('football','Football',this)">
+            <span class="mnav-icon">⚽</span>Soccer
+        </button>
+        <button class="mobile-nav-btn" onclick="mobileNav('beatwinter','Beat Winter',this)">
+            <span class="mnav-icon">⚡</span>Winter
+        </button>
+        <button class="mobile-nav-btn" onclick="mobileNav('predict','Predict',this)">
+            <span class="mnav-icon">🔮</span>Predict
+        </button>
+        <button class="mobile-nav-btn" onclick="mobileNav('portfolio','Portfolio',this)">
+            <span class="mnav-icon">📊</span>Portfolio
+        </button>
+        <button class="mobile-nav-btn" onclick="mobileNav('advanced','Advanced AI',this)">
+            <span class="mnav-icon">🤖</span>AI
+        </button>
+    </nav>
 
     <script>
         // ── SPLASH SCREEN ──
@@ -3126,6 +3435,18 @@
             ctx.arcTo(x, y, x + r, y, r);
             ctx.closePath();
         }
+
+        // ── MOBILE NAV ──
+        window.mobileNav = function (sectionId, tableName, btn) {
+            // Update active state on bottom nav
+            document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            // Call the main nav function
+            window.nav(sectionId, tableName);
+        };
+
+        // Sync mobile nav active state when desktop nav is clicked
+        const _origNav = window.nav;
 
         // ── LOGOUT ──
         window.handleLogout = function () { document.body.style.opacity = '0'; setTimeout(() => { window.location.href = 'index.html'; }, 500); };
