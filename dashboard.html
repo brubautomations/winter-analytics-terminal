@@ -2034,8 +2034,8 @@
                 <p style="color:var(--text-muted);font-size:0.85rem;margin:0 0 14px 0;">Submit a question for a chance
                     to be featured in our next prediction market!</p>
                 <div style="display:flex;gap:10px;">
-                    <input id="submit-question-input" type="text"
-                        placeholder="e.g. Will Jesus come back before Christmas?" maxlength="150" class="predict-input">
+                    <input id="submit-question-input" type="text" placeholder="e.g. Will Jesus return before 2027?"
+                        maxlength="150" class="predict-input">
                     <button onclick="submitPredictionQuestion()" class="btn-submit-q">Submit ✦</button>
                 </div>
                 <div id="submit-question-status" style="margin-top:10px;font-size:0.8rem;min-height:18px;"></div>
@@ -2197,6 +2197,12 @@
         window._activeBetOdds = 1.9;
 
         // ── BALANCE SYSTEM ──
+        function toggleBetDetail(betId) {
+            const el = document.getElementById('bet-detail-' + betId);
+            if (!el) return;
+            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        }
+
         async function loadBetHistory() {
             const feed = document.getElementById('bet-history-feed');
             if (!feed) return;
@@ -2222,6 +2228,21 @@
                 const losses = records.filter(r => r.fields.Status === 'Lost').length;
                 const pending = records.filter(r => !r.fields.Status || r.fields.Status === 'Pending').length;
                 const winRate = (wins + losses) > 0 ? Math.round(wins / (wins + losses) * 100) : 0;
+
+                // Credit won bets that haven't been credited yet
+                // Check localStorage for already-credited bet IDs
+                const creditedBets = JSON.parse(localStorage.getItem('wa_credited_bets') || '[]');
+                for (const r of records) {
+                    if (r.fields.Status === 'Won' && !creditedBets.includes(r.id)) {
+                        const payout = parseFloat(r.fields.Payout || 0);
+                        if (payout > 0) {
+                            await addWinnings(payout, 'Won: ' + (r.fields.Description || 'Bet'));
+                            creditedBets.push(r.id);
+                            showToast('🏆 ₱' + payout.toLocaleString('en-PH') + ' credited for winning bet!', 5000);
+                        }
+                    }
+                }
+                localStorage.setItem('wa_credited_bets', JSON.stringify(creditedBets));
 
                 // Calculate real P&L
                 const totalWon = records.filter(r => r.fields.Status === 'Won').reduce((s, r) => s + (r.fields.Payout || 0), 0);
@@ -2258,14 +2279,26 @@
                         : status === 'Lost'
                             ? `<span style="color:#ef4444;">-₱${parseFloat(f.Amount || 0).toLocaleString('en-PH')}</span>`
                             : `<span style="color:#94a3b8;">₱${parseFloat(f.Amount || 0).toLocaleString('en-PH')}</span>`;
-                    return `<div style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.06);border-left:3px solid ${statusColor};border-radius:8px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
-                        <div style="flex:1;min-width:0;">
-                            <div style="font-size:0.85rem;font-weight:600;color:#f8fafc;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${f.Description || 'Bet'}</div>
-                            <div style="font-size:0.75rem;color:#94a3b8;">${f.Type || 'Sports'} · ${parseFloat(f.Odds || 1.9).toFixed(2)}x odds</div>
+                    const betId = r.id;
+                    return `<div onclick="toggleBetDetail('${betId}')" style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.06);border-left:3px solid ${statusColor};border-radius:8px;padding:14px 16px;cursor:pointer;transition:border-color 0.2s;"
+                        onmouseover="this.style.borderColor='rgba(255,255,255,0.15)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.06)'">
+                        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+                            <div style="flex:1;min-width:0;">
+                                <div style="font-size:0.85rem;font-weight:600;color:#f8fafc;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${f.Description || 'Bet'}</div>
+                                <div style="font-size:0.75rem;color:#94a3b8;">${f.Type || 'Sports'} · ${parseFloat(f.Odds || 1.9).toFixed(2)}x odds</div>
+                            </div>
+                            <div style="text-align:right;white-space:nowrap;">
+                                <div style="font-size:0.85rem;font-weight:700;color:${statusColor};">${statusEmoji} ${status}</div>
+                                <div style="font-size:0.8rem;">${netStr}</div>
+                            </div>
                         </div>
-                        <div style="text-align:right;white-space:nowrap;">
-                            <div style="font-size:0.85rem;font-weight:700;color:${statusColor};">${statusEmoji} ${status}</div>
-                            <div style="font-size:0.8rem;">${netStr}</div>
+                        <div id="bet-detail-${betId}" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06);font-size:0.8rem;color:#94a3b8;line-height:1.8;">
+                            <div><span style="color:#64748b;">Bet:</span> <span style="color:#f8fafc;">${f.Description || 'N/A'}</span></div>
+                            <div><span style="color:#64748b;">Type:</span> ${f.Type || 'Sports'}</div>
+                            <div><span style="color:#64748b;">Amount:</span> <span style="color:#fbbf24;">₱${parseFloat(f.Amount || 0).toLocaleString('en-PH')}</span></div>
+                            <div><span style="color:#64748b;">Odds:</span> ${parseFloat(f.Odds || 1.9).toFixed(2)}x</div>
+                            <div><span style="color:#64748b;">Potential Payout:</span> <span style="color:#10b981;">₱${parseFloat(f.Payout || 0).toLocaleString('en-PH')}</span></div>
+                            <div><span style="color:#64748b;">Status:</span> <span style="color:${statusColor};">${statusEmoji} ${status}</span></div>
                         </div>
                     </div>`;
                 }).join('');
@@ -3005,7 +3038,7 @@
             ctx.fillStyle = '#38bdf8';
             ctx.font = 'bold 22px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText('⚡ Powered by Winter AI — Gemini 2.5 Flash Sports Intelligence', W / 2, 802);
+            ctx.fillText('❄️ Winter Bet and Analytics — Advanced AI on Sports Betting & Prediction Markets', W / 2, 802);
             ctx.fillStyle = 'rgba(255,255,255,0.3)';
             ctx.font = '18px Arial';
             ctx.fillText('Track your picks at winterbet.netlify.app', W / 2, 838);
