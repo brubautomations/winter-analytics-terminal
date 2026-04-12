@@ -1908,8 +1908,8 @@
             </div>
             <div class="stats-grid">
                 <div class="stat-box">
-                    <div class="stat-label">Total Bets</div>
-                    <div class="stat-val" id="stat-total-bets">--</div>
+                    <div class="stat-label">Bet Volume</div>
+                    <div class="stat-val" id="stat-total-bets" style="font-size:0.9rem;">--</div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-label">Wins</div>
@@ -2224,6 +2224,7 @@
                 // Calculate real stats
                 const records = json.records;
                 const totalBets = records.length;
+                const totalVolume = records.reduce((s, r) => s + parseFloat(r.fields.Amount || 0), 0);
                 const wins = records.filter(r => r.fields.Status === 'Won').length;
                 const losses = records.filter(r => r.fields.Status === 'Lost').length;
                 const pending = records.filter(r => !r.fields.Status || r.fields.Status === 'Pending').length;
@@ -2258,7 +2259,7 @@
 
                 // Update stats boxes
                 const statMap = {
-                    'stat-total-bets': totalBets,
+                    'stat-total-bets': '₱' + totalVolume.toLocaleString('en-PH'),
                     'stat-wins': wins,
                     'stat-losses': losses,
                     'stat-winrate': winRate + '%'
@@ -2320,10 +2321,8 @@
                     const bets = json.records[0].fields.Bets || [];
                     const won = json.records[0].fields.TotalWon || 0;
                     const lost = json.records[0].fields.TotalLost || 0;
-                    const total = Math.round(won + lost);
-                    const wins = '--'; // would need Bets query to compute
-                    const losses = '--';
-                    document.getElementById('stat-total-bets').innerText = total || '--';
+                    // stat-total-bets is set by loadBetHistory with correct bet count
+                    // Don't set it here from TotalWon+TotalLost (that's peso amounts not count)
                     document.getElementById('portfolio-subtext').innerText = `Total Won: ₱${won.toLocaleString()} · Lost: ₱${lost.toLocaleString()}`;
                 }
             } catch (e) { console.error('Balance load error:', e); }
@@ -2387,8 +2386,7 @@
                                 Amount: amount,
                                 Odds: odds || 1.9,
                                 Payout: Math.round(amount * (odds || 1.9)),
-                                Status: 'Pending',
-                                BetDate: new Date(Date.now() - 13 * 3600000).toISOString().split('T')[0]
+                                Status: 'Pending'
                             }
                         }], typecast: true
                     })
@@ -2971,7 +2969,7 @@
 
             // Main headline - PNL
             ctx.textAlign = 'center';
-            const isPnlPositive = !pnl.includes('-') || pnl.includes('+');
+            const isPnlPositive = pnl.includes('+') && !pnl.startsWith('-');
             ctx.fillStyle = isPnlPositive ? '#10b981' : '#ef4444';
             ctx.font = 'bold 96px Arial';
             ctx.fillText(pnl, W / 2, 300);
@@ -2985,7 +2983,7 @@
                 { label: 'WINS', value: wins, color: '#10b981', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.25)' },
                 { label: 'LOSSES', value: losses, color: '#ef4444', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.25)' },
                 { label: 'WIN RATE', value: winrate, color: '#38bdf8', bg: 'rgba(56,189,248,0.08)', border: 'rgba(56,189,248,0.25)' },
-                { label: 'TOTAL BETS', value: total, color: '#fbbf24', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.25)' },
+                { label: 'BET VOLUME', value: total, color: '#fbbf24', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.25)' },
             ];
             const boxW = 210, boxH = 200, gap = 20;
             const startX = (W - (boxW * 4 + gap * 3)) / 2;
