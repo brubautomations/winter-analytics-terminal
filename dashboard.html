@@ -2269,12 +2269,12 @@
                 </div>
 
                 <!-- BET HISTORY -->
-                <div style="margin-top:24px;">
+                <div style="margin-top:24px;grid-column:1/-1;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
                         <h3 style="margin:0;font-size:1rem;font-weight:600;color:var(--text-main);">Recent Bets</h3>
                         <span style="font-size:0.75rem;color:var(--text-muted);">Last 20 bets</span>
                     </div>
-                    <div id="bet-history-feed" style="display:flex;flex-direction:column;gap:10px;">
+                    <div id="bet-history-feed" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                         <p style="color:var(--text-muted);font-size:0.9rem;">Loading bet history...</p>
                     </div>
                 </div>
@@ -2841,8 +2841,9 @@
                     if (el) el.innerText = val;
                 });
 
-                // Render bet cards (show last 20)
-                feed.innerHTML = records.slice(0, 20).map(r => {
+                // Render bet cards (show last 20, newest first)
+                const sortedRecords = [...records].reverse();
+                feed.innerHTML = sortedRecords.slice(0, 20).map(r => {
                     const f = r.fields;
                     const status = f.Status || 'Pending';
                     const statusColor = status === 'Won' ? '#10b981' : status === 'Lost' ? '#ef4444' : '#38bdf8';
@@ -3223,21 +3224,30 @@
         // ── PREDICTION STATS WIDGET ──
         async function loadPredictionStats() {
             try {
-                const formula = encodeURIComponent(`AND({User}="${USER_ID}",{Type}="Prediction")`);
-                const url = `https://api.airtable.com/v0/${BETTING_BASE_ID}/Bets?filterByFormula=${formula}&maxRecords=500`;
-                const res = await fetch(url, { headers: { Authorization: `Bearer ${BETTING_TOKEN}` } });
-                const json = await res.json();
-                const recs = json.records || [];
+                // Predictions only for "Placed" and "At Stake"
+                const predFormula = encodeURIComponent(`AND({User}="${USER_ID}",{Type}="Prediction")`);
+                const predUrl = `https://api.airtable.com/v0/${BETTING_BASE_ID}/Bets?filterByFormula=${predFormula}&maxRecords=500`;
+                const predRes = await fetch(predUrl, { headers: { Authorization: `Bearer ${BETTING_TOKEN}` } });
+                const predJson = await predRes.json();
+                const predRecs = predJson.records || [];
 
-                const placed = recs.length;
-                const atStake = recs
+                // All bets for Best Odds Won + Biggest L
+                const allFormula = encodeURIComponent(`{User}="${USER_ID}"`);
+                const allUrl = `https://api.airtable.com/v0/${BETTING_BASE_ID}/Bets?filterByFormula=${allFormula}&maxRecords=500`;
+                const allRes = await fetch(allUrl, { headers: { Authorization: `Bearer ${BETTING_TOKEN}` } });
+                const allJson = await allRes.json();
+                const allRecs = allJson.records || [];
+
+                const placed = predRecs.length;
+                const atStake = predRecs
                     .filter(r => r.fields.Status === 'Pending')
                     .reduce((s, r) => s + parseFloat(r.fields.Amount || 0), 0);
-                const wonRecs = recs.filter(r => r.fields.Status === 'Won');
+
+                const wonRecs = allRecs.filter(r => r.fields.Status === 'Won');
                 const bestOdds = wonRecs.length > 0
                     ? Math.max(...wonRecs.map(r => parseFloat(r.fields.Odds || 0)))
                     : 0;
-                const lostRecs = recs.filter(r => r.fields.Status === 'Lost');
+                const lostRecs = allRecs.filter(r => r.fields.Status === 'Lost');
                 const biggestL = lostRecs.length > 0
                     ? Math.max(...lostRecs.map(r => parseFloat(r.fields.Amount || 0)))
                     : 0;
