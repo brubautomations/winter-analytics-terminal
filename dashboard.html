@@ -448,7 +448,6 @@
         /* ─── MAIN CONTAINER ─── */
         .main {
             flex: 1;
-            min-width: 0;
             margin-top: 60px;
             height: calc(100vh - 60px);
             overflow-y: auto;
@@ -1587,287 +1586,279 @@
             color: #ef4444;
         }
 
-        /* ═══════════════════════════════════════════
-           RESPONSIVE — DESKTOP SCALING
-        ═══════════════════════════════════════════ */
-        @media (max-width: 1280px) {
-            .sidebar {
-                width: 220px;
-                min-width: 220px;
+
+        /* ═══ CASINO OVERLAY ═══ */
+        .casino-tab {
+            padding: 14px 28px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: rgba(255, 215, 0, 0.4);
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        .casino-tab:hover {
+            color: #ffd700;
+        }
+
+        .active-ctab {
+            color: #ffd700 !important;
+            border-bottom-color: #ffd700 !important;
+            background: rgba(255, 215, 0, 0.05) !important;
+        }
+
+        .casino-game-screen {
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: calc(100vh - 130px);
+            overflow-y: auto;
+            padding: 24px 20px;
+            gap: 24px;
+        }
+
+        .casino-bet-input {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            color: #ffd700;
+            padding: 12px 18px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            text-align: center;
+            width: 160px;
+            outline: none;
+        }
+
+        .casino-bet-input:focus {
+            border-color: #ffd700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+        }
+
+        .casino-btn {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        .casino-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        .casino-btn:active {
+            transform: translateY(0);
+        }
+
+        .casino-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .casino-card {
+            width: 70px;
+            height: 100px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 800;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .card-red {
+            color: #dc2626;
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, #1a1a2e 25%, #16213e 100%);
+            background-image: repeating-linear-gradient(45deg, rgba(255, 215, 0, 0.1) 0px, rgba(255, 215, 0, 0.1) 2px, transparent 2px, transparent 8px);
+        }
+
+        .slot-reel {
+            width: 90px;
+            height: 90px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            transition: all 0.1s;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5), 0 0 10px rgba(255, 215, 0, 0.1);
+        }
+
+        .slot-reel.spinning {
+            animation: slotSpin 0.1s linear infinite;
+        }
+
+        .slot-reel.winner {
+            border-color: #ffd700;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.1);
+            animation: slotWin 0.5s ease infinite alternate;
+        }
+
+        .coin {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.3);
+            transition: all 0.3s;
+            background: radial-gradient(circle at 35% 35%, #ffd700, #b8860b);
+            border: 4px solid rgba(255, 215, 0, 0.5);
+        }
+
+        .coin.flipping {
+            animation: coinFlip 0.8s ease;
+        }
+
+        .baccarat-area {
+            background: rgba(0, 80, 0, 0.15);
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            border-radius: 16px;
+            padding: 24px 32px;
+            text-align: center;
+            min-width: 200px;
+        }
+
+        .quick-bet-btn {
+            padding: 7px 14px;
+            background: rgba(255, 215, 0, 0.08);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            color: #ffd700;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+
+        .quick-bet-btn:hover {
+            background: rgba(255, 215, 0, 0.15);
+        }
+
+        @keyframes slotSpin {
+            0% {
+                transform: translateY(-4px);
             }
 
-            .main {
-                padding: 24px 24px;
+            50% {
+                transform: translateY(4px);
             }
 
-            .portfolio-grid {
-                grid-template-columns: 1fr 1fr;
+            100% {
+                transform: translateY(-4px);
             }
         }
 
-        @media (max-width: 1100px) {
-            .sidebar {
-                width: 200px;
-                min-width: 200px;
-                padding: 16px 10px;
+        @keyframes slotWin {
+            from {
+                transform: scale(1);
             }
 
-            .tab {
-                font-size: 0.82rem;
-                padding: 9px 10px;
-            }
-
-            .main {
-                padding: 20px 18px;
-            }
-
-            .advanced-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .card {
-                flex-direction: column;
-            }
-
-            .card img {
-                width: 100%;
-                max-height: 180px;
-                object-fit: cover;
+            to {
+                transform: scale(1.08);
             }
         }
 
-        /* ═══════════════════════════════════════════
-           RESPONSIVE — TABLET (768-1024px)
-        ═══════════════════════════════════════════ */
-        @media (max-width: 1024px) {
-            .sidebar {
-                width: 64px;
-                min-width: 64px;
-                padding: 16px 8px;
-                overflow: hidden;
+        @keyframes coinFlip {
+            0% {
+                transform: rotateY(0deg) scale(1);
             }
 
-            .sidebar-section-label {
-                display: none;
+            50% {
+                transform: rotateY(900deg) scale(1.2);
             }
 
-            .tab-label {
-                display: none;
-            }
-
-            .tab {
-                justify-content: center;
-                padding: 10px;
-            }
-
-            .tab-icon {
-                font-size: 1.2rem;
-                margin: 0;
-            }
-
-            .tab-badge {
-                display: none;
-            }
-
-            .logo-mark {
-                margin: 0 auto;
-            }
-
-            h1.brand-text {
-                display: none;
-            }
-
-            .main {
-                padding: 20px 16px;
-            }
-
-            .portfolio-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
+            100% {
+                transform: rotateY(1800deg) scale(1);
             }
         }
 
-        /* ═══════════════════════════════════════════
-           RESPONSIVE — MOBILE (<768px)
-           Bottom tab navigation, full-width content
-        ═══════════════════════════════════════════ */
+        @keyframes casinoResultPop {
+            from {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes screenShake {
+
+            0%,
+            100% {
+                transform: translate(0, 0) rotate(0);
+            }
+
+            20% {
+                transform: translate(-8px, 4px) rotate(-1deg);
+            }
+
+            40% {
+                transform: translate(8px, -4px) rotate(1deg);
+            }
+
+            60% {
+                transform: translate(-6px, 6px) rotate(-0.5deg);
+            }
+
+            80% {
+                transform: translate(6px, -2px) rotate(0.5deg);
+            }
+        }
+
         @media (max-width: 767px) {
-            body {
-                flex-direction: column;
+            .casino-game-screen {
+                padding: 16px 12px;
             }
 
-            /* Hide desktop sidebar completely */
-            .sidebar {
-                display: none !important;
+            .casino-card {
+                width: 55px;
+                height: 78px;
+                font-size: 1.4rem;
             }
 
-            /* Header adjustments */
-            header {
-                padding: 0 16px;
-                height: 52px;
+            .slot-reel {
+                width: 72px;
+                height: 72px;
+                font-size: 2.4rem;
             }
 
-            h1 {
-                font-size: 0.9rem !important;
-                letter-spacing: 2px;
+            .coin {
+                width: 90px;
+                height: 90px;
+                font-size: 2.5rem;
             }
 
-            .header-center {
-                display: none;
+            .casino-tab {
+                padding: 12px 16px;
+                font-size: 0.78rem;
             }
-
-            .balance-amount {
-                font-size: 0.85rem !important;
-            }
-
-            /* Main content full width */
-            .main {
-                margin-top: 52px;
-                height: calc(100vh - 52px - 64px);
-                /* header + bottom nav */
-                padding: 16px 14px;
-                padding-bottom: 80px;
-            }
-
-            /* Bottom tab bar */
-            .mobile-nav {
-                display: flex !important;
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                height: 64px;
-                background: rgba(8, 15, 31, 0.98);
-                border-top: 1px solid rgba(255, 255, 255, 0.08);
-                backdrop-filter: blur(20px);
-                z-index: 1000;
-                align-items: center;
-                justify-content: space-around;
-                padding: 0 8px;
-            }
-
-            .mobile-nav-btn {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 3px;
-                padding: 8px 12px;
-                border-radius: 10px;
-                cursor: pointer;
-                transition: all 0.2s;
-                font-size: 0.6rem;
-                color: var(--text-muted);
-                font-weight: 600;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                min-width: 52px;
-                text-align: center;
-                border: none;
-                background: none;
-            }
-
-            .mobile-nav-btn.active {
-                color: var(--ice-blue-accent);
-            }
-
-            .mobile-nav-btn .mnav-icon {
-                font-size: 1.3rem;
-            }
-
-            /* Cards stack vertically */
-            .card {
-                flex-direction: column;
-            }
-
-            .card img {
-                width: 100%;
-                max-height: 160px;
-                object-fit: cover;
-                border-right: none !important;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-            }
-
-            /* Portfolio */
-            .portfolio-grid {
-                grid-template-columns: 1fr;
-                gap: 12px;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 10px;
-            }
-
-            .brag-box {
-                grid-column: 1 / -1;
-            }
-
-            /* Beat Winter record */
-            .bw-record {
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-
-            .bw-stat {
-                min-width: calc(50% - 8px);
-            }
-
-            /* Advanced AI */
-            .advanced-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .chat-messages {
-                height: 260px;
-            }
-
-            /* Predict */
-            .predict-feed {
-                padding-bottom: 80px;
-            }
-
-            /* Sub tabs */
-            .sub-tabs {
-                overflow-x: auto;
-                white-space: nowrap;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: none;
-            }
-
-            .sub-tabs::-webkit-scrollbar {
-                display: none;
-            }
-
-            /* Toast position */
-            #wa-toast {
-                bottom: 80px;
-                right: 14px;
-                max-width: 280px;
-            }
-
-            /* Article modal — sheet from bottom on mobile */
-            .modal-overlay {
-                align-items: flex-end !important;
-                padding: 0 !important;
-            }
-
-            .modal-content {
-                max-width: 100% !important;
-                width: 100% !important;
-                max-height: 88vh !important;
-                border-radius: 20px 20px 0 0 !important;
-                border-left: none !important;
-                border-right: none !important;
-                border-bottom: none !important;
-            }
-        }
-
-        /* Hide mobile nav on desktop */
-        .mobile-nav {
-            display: none;
         }
 
         /* ─── MONEY RAIN EASTER EGG ─── */
@@ -2436,30 +2427,230 @@
         </div>
     </div>
 
-    <!-- ═══ MOBILE BOTTOM NAV ═══ -->
-    <nav class="mobile-nav" id="mobile-nav">
-        <button class="mobile-nav-btn active" onclick="mobileNav('basketball','Basketball',this)">
-            <span class="mnav-icon">🏀</span>Ball
-        </button>
-        <button class="mobile-nav-btn" onclick="mobileNav('usmajors','US Majors',this)">
-            <span class="mnav-icon">⚾</span>Majors
-        </button>
-        <button class="mobile-nav-btn" onclick="mobileNav('football','Football',this)">
-            <span class="mnav-icon">⚽</span>Soccer
-        </button>
-        <button class="mobile-nav-btn" onclick="mobileNav('beatwinter','Beat Winter',this)">
-            <span class="mnav-icon">⚡</span>Winter
-        </button>
-        <button class="mobile-nav-btn" onclick="mobileNav('predict','Predict',this)">
-            <span class="mnav-icon">🔮</span>Predict
-        </button>
-        <button class="mobile-nav-btn" onclick="mobileNav('portfolio','Portfolio',this)">
-            <span class="mnav-icon">📊</span>Portfolio
-        </button>
-        <button class="mobile-nav-btn" onclick="mobileNav('advanced','Advanced AI',this)">
-            <span class="mnav-icon">🤖</span>AI
-        </button>
-    </nav>
+
+    <!-- ═══ WINTER CASINO OVERLAY ═══ -->
+    <div id="casino-overlay"
+        style="display:none;position:fixed;inset:0;z-index:5000;background:#0a0a0f;overflow:hidden;">
+        <canvas id="casino-confetti"
+            style="position:absolute;inset:0;pointer-events:none;z-index:9999;width:100%;height:100%;"></canvas>
+        <div id="casino-result-msg"
+            style="display:none;position:absolute;inset:0;z-index:200;align-items:center;justify-content:center;pointer-events:none;background:rgba(0,0,0,0.5);">
+            <div id="casino-result-inner"
+                style="text-align:center;animation:casinoResultPop 0.4s cubic-bezier(0.34,1.56,0.64,1);">
+                <div id="casino-result-emoji" style="font-size:5rem;line-height:1;margin-bottom:10px;"></div>
+                <div id="casino-result-text"
+                    style="font-family:'JetBrains Mono',monospace;font-weight:800;font-size:2.5rem;letter-spacing:2px;text-shadow:0 0 40px currentColor;">
+                </div>
+                <div id="casino-result-amount"
+                    style="font-size:1.2rem;margin-top:8px;opacity:0.8;font-family:'JetBrains Mono',monospace;"></div>
+            </div>
+        </div>
+        <div
+            style="position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:60px;background:rgba(0,0,0,0.8);border-bottom:1px solid rgba(255,215,0,0.2);backdrop-filter:blur(20px);">
+            <div style="display:flex;align-items:center;gap:14px;">
+                <span style="font-size:1.4rem;">🎰</span>
+                <div
+                    style="font-family:'JetBrains Mono',monospace;font-weight:800;font-size:1rem;color:#ffd700;letter-spacing:3px;">
+                    WINTER CASINO</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:20px;">
+                <div style="text-align:right;">
+                    <div
+                        style="font-size:0.6rem;color:rgba(255,215,0,0.4);text-transform:uppercase;letter-spacing:1px;">
+                        Balance</div>
+                    <div id="casino-balance-display"
+                        style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1rem;color:#ffd700;">₱
+                        --</div>
+                </div>
+                <button onclick="exitCasino()"
+                    style="padding:8px 18px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);color:#ef4444;border-radius:8px;cursor:pointer;font-weight:700;font-size:0.82rem;letter-spacing:1px;">✕
+                    EXIT</button>
+            </div>
+        </div>
+        <div style="display:flex;border-bottom:1px solid rgba(255,215,0,0.1);background:rgba(0,0,0,0.5);">
+            <button id="ctab-baccarat" onclick="switchCasinoGame('baccarat')" class="casino-tab active-ctab">🃏
+                Baccarat</button>
+            <button id="ctab-coinflip" onclick="switchCasinoGame('coinflip')" class="casino-tab">🪙 Coin Flip</button>
+            <button id="ctab-slots" onclick="switchCasinoGame('slots')" class="casino-tab">🎰 Slots</button>
+        </div>
+        <div id="cgame-baccarat" class="casino-game-screen" style="display:flex;">
+            <div style="text-align:center;max-width:700px;width:100%;">
+                <div
+                    style="font-family:'JetBrains Mono',monospace;font-size:1.4rem;font-weight:800;color:#ffd700;letter-spacing:3px;margin-bottom:4px;">
+                    BACCARAT</div>
+                <div style="font-size:0.75rem;color:rgba(255,215,0,0.4);letter-spacing:2px;margin-bottom:24px;">PUNTO
+                    BANCO · CLOSEST TO 9 WINS</div>
+
+                <!-- GAME TABLE -->
+                <div style="display:flex;gap:20px;justify-content:center;margin-bottom:28px;flex-wrap:wrap;">
+                    <div class="baccarat-area">
+                        <div
+                            style="font-size:0.7rem;color:rgba(255,255,255,0.4);letter-spacing:2px;margin-bottom:14px;">
+                            PLAYER</div>
+                        <div id="bac-player-cards"
+                            style="display:flex;gap:8px;justify-content:center;min-height:100px;align-items:center;">
+                            <div class="casino-card card-back">?</div>
+                            <div class="casino-card card-back">?</div>
+                        </div>
+                        <div id="bac-player-score"
+                            style="font-family:'JetBrains Mono',monospace;font-size:2rem;font-weight:800;color:#38bdf8;margin-top:12px;">
+                            -</div>
+                    </div>
+                    <div style="display:flex;align-items:center;justify-content:center;">
+                        <div
+                            style="font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:800;color:rgba(255,215,0,0.3);">
+                            VS</div>
+                    </div>
+                    <div class="baccarat-area">
+                        <div
+                            style="font-size:0.7rem;color:rgba(255,255,255,0.4);letter-spacing:2px;margin-bottom:14px;">
+                            BANKER</div>
+                        <div id="bac-banker-cards"
+                            style="display:flex;gap:8px;justify-content:center;min-height:100px;align-items:center;">
+                            <div class="casino-card card-back">?</div>
+                            <div class="casino-card card-back">?</div>
+                        </div>
+                        <div id="bac-banker-score"
+                            style="font-family:'JetBrains Mono',monospace;font-size:2rem;font-weight:800;color:#f97316;margin-top:12px;">
+                            -</div>
+                    </div>
+                </div>
+
+                <!-- BET AREA -->
+                <div
+                    style="background:rgba(0,0,0,0.4);border:1px solid rgba(255,215,0,0.1);border-radius:14px;padding:20px 24px;">
+                    <div style="font-size:0.7rem;color:rgba(255,255,255,0.3);letter-spacing:2px;margin-bottom:14px;">
+                        PLACE YOUR BET</div>
+                    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:16px;flex-wrap:wrap;">
+                        <button onclick="setBacBet('player')" id="bac-btn-player"
+                            style="padding:12px 28px;background:rgba(56,189,248,0.15);border:2px solid rgba(56,189,248,0.4);color:#38bdf8;border-radius:10px;cursor:pointer;font-weight:800;font-size:0.9rem;letter-spacing:1px;transition:all 0.2s;"
+                            onmouseover="this.style.background='rgba(56,189,248,0.25)'"
+                            onmouseout="if(!this.classList.contains('bac-selected'))this.style.background='rgba(56,189,248,0.15)'">
+                            PLAYER · 2x
+                        </button>
+                        <button onclick="setBacBet('tie')" id="bac-btn-tie"
+                            style="padding:12px 28px;background:rgba(16,185,129,0.15);border:2px solid rgba(16,185,129,0.4);color:#10b981;border-radius:10px;cursor:pointer;font-weight:800;font-size:0.9rem;letter-spacing:1px;transition:all 0.2s;"
+                            onmouseover="this.style.background='rgba(16,185,129,0.25)'"
+                            onmouseout="if(!this.classList.contains('bac-selected'))this.style.background='rgba(16,185,129,0.15)'">
+                            TIE · 8x
+                        </button>
+                        <button onclick="setBacBet('banker')" id="bac-btn-banker"
+                            style="padding:12px 28px;background:rgba(249,115,22,0.15);border:2px solid rgba(249,115,22,0.4);color:#f97316;border-radius:10px;cursor:pointer;font-weight:800;font-size:0.9rem;letter-spacing:1px;transition:all 0.2s;"
+                            onmouseover="this.style.background='rgba(249,115,22,0.25)'"
+                            onmouseout="if(!this.classList.contains('bac-selected'))this.style.background='rgba(249,115,22,0.15)'">
+                            BANKER · 1.95x
+                        </button>
+                    </div>
+                    <div style="display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;">
+                        <input id="bac-bet-amount" type="number" min="100" step="100" placeholder="₱ Bet"
+                            class="casino-bet-input">
+                        <div style="display:flex;gap:6px;">
+                            <button class="quick-bet-btn" onclick="setCasinoBet('bac-bet-amount',100)">₱100</button>
+                            <button class="quick-bet-btn" onclick="setCasinoBet('bac-bet-amount',500)">₱500</button>
+                            <button class="quick-bet-btn" onclick="setCasinoBet('bac-bet-amount',1000)">₱1K</button>
+                            <button class="quick-bet-btn" onclick="setCasinoBet('bac-bet-amount',5000)">₱5K</button>
+                        </div>
+                    </div>
+                    <div id="bac-selected-display"
+                        style="font-size:0.8rem;color:rgba(255,215,0,0.5);margin-top:10px;font-family:'JetBrains Mono',monospace;">
+                        Select a bet above</div>
+                    <button id="bac-deal-btn" onclick="dealBaccarat()"
+                        style="margin-top:14px;width:100%;max-width:280px;padding:15px;background:linear-gradient(135deg,#ffd700,#b8860b);color:#0a0a0f;border:none;border-radius:10px;font-weight:800;font-size:1rem;cursor:pointer;letter-spacing:2px;"
+                        class="casino-btn">
+                        🃏 DEAL
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="cgame-coinflip" class="casino-game-screen" style="display:none;">
+            <div style="text-align:center;max-width:500px;width:100%;">
+                <div
+                    style="font-family:'JetBrains Mono',monospace;font-size:1.4rem;font-weight:800;color:#ffd700;letter-spacing:3px;margin-bottom:4px;">
+                    COIN FLIP</div>
+                <div style="font-size:0.75rem;color:rgba(255,215,0,0.4);letter-spacing:2px;margin-bottom:32px;">HEADS OR
+                    TAILS · 2x PAYOUT</div>
+
+                <div id="coin-el" class="coin" style="margin:0 auto 32px auto;">🪙</div>
+                <div id="coin-result-text"
+                    style="font-family:'JetBrains Mono',monospace;font-size:1rem;color:rgba(255,215,0,0.5);margin-bottom:24px;letter-spacing:2px;">
+                    Choose your side</div>
+
+                <div style="display:flex;gap:12px;justify-content:center;margin-bottom:24px;">
+                    <button onclick="setCoinSide('heads')" id="coin-btn-heads"
+                        style="padding:14px 36px;background:rgba(255,215,0,0.1);border:2px solid rgba(255,215,0,0.3);color:#ffd700;border-radius:10px;cursor:pointer;font-weight:800;font-size:1rem;transition:all 0.2s;"
+                        onmouseover="this.style.background='rgba(255,215,0,0.2)'"
+                        onmouseout="if(!this.classList.contains('coin-selected'))this.style.background='rgba(255,215,0,0.1)'">
+                        HEADS
+                    </button>
+                    <button onclick="setCoinSide('tails')" id="coin-btn-tails"
+                        style="padding:14px 36px;background:rgba(255,215,0,0.1);border:2px solid rgba(255,215,0,0.3);color:#ffd700;border-radius:10px;cursor:pointer;font-weight:800;font-size:1rem;transition:all 0.2s;"
+                        onmouseover="this.style.background='rgba(255,215,0,0.2)'"
+                        onmouseout="if(!this.classList.contains('coin-selected'))this.style.background='rgba(255,215,0,0.1)'">
+                        TAILS
+                    </button>
+                </div>
+
+                <div
+                    style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+                    <input id="coin-bet-amount" type="number" min="100" step="100" placeholder="₱ Bet"
+                        class="casino-bet-input">
+                    <div style="display:flex;gap:6px;">
+                        <button class="quick-bet-btn" onclick="setCasinoBet('coin-bet-amount',100)">₱100</button>
+                        <button class="quick-bet-btn" onclick="setCasinoBet('coin-bet-amount',500)">₱500</button>
+                        <button class="quick-bet-btn" onclick="setCasinoBet('coin-bet-amount',1000)">₱1K</button>
+                    </div>
+                </div>
+
+                <button id="coin-flip-btn" onclick="flipCoin()"
+                    style="width:100%;max-width:280px;padding:15px;background:linear-gradient(135deg,#ffd700,#b8860b);color:#0a0a0f;border:none;border-radius:10px;font-weight:800;font-size:1rem;cursor:pointer;letter-spacing:2px;"
+                    class="casino-btn">
+                    🪙 FLIP!
+                </button>
+            </div>
+        </div>
+        <div id="cgame-slots" class="casino-game-screen" style="display:none;">
+            <div style="text-align:center;max-width:500px;width:100%;">
+                <div
+                    style="font-family:'JetBrains Mono',monospace;font-size:1.4rem;font-weight:800;color:#ffd700;letter-spacing:3px;margin-bottom:4px;">
+                    SLOT MACHINE</div>
+                <div style="font-size:0.75rem;color:rgba(255,215,0,0.4);letter-spacing:2px;margin-bottom:24px;">MATCH 3
+                    · JACKPOT ON 7️⃣7️⃣7️⃣</div>
+
+                <!-- SLOT MACHINE BODY -->
+                <div
+                    style="background:linear-gradient(180deg,#1a0a00,#0d0600);border:3px solid rgba(255,215,0,0.4);border-radius:20px;padding:28px;margin-bottom:24px;box-shadow:0 0 40px rgba(255,215,0,0.1),inset 0 0 40px rgba(0,0,0,0.5);">
+                    <div style="display:flex;gap:12px;justify-content:center;margin-bottom:16px;">
+                        <div id="slot-0" class="slot-reel">🍒</div>
+                        <div id="slot-1" class="slot-reel">🔔</div>
+                        <div id="slot-2" class="slot-reel">⭐</div>
+                    </div>
+                    <!-- Payout table -->
+                    <div
+                        style="background:rgba(0,0,0,0.4);border-radius:8px;padding:10px 14px;font-size:0.7rem;color:rgba(255,215,0,0.5);font-family:'JetBrains Mono',monospace;line-height:1.8;">
+                        7️⃣7️⃣7️⃣ JACKPOT · 50x &nbsp;|&nbsp; ⭐⭐⭐ · 20x &nbsp;|&nbsp; 🔔🔔🔔 · 10x<br>
+                        🍋🍋🍋 · 8x &nbsp;|&nbsp; 🍒🍒🍒 · 5x &nbsp;|&nbsp; Any pair · 1.5x &nbsp;|&nbsp; No match · 0
+                    </div>
+                </div>
+
+                <div
+                    style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+                    <input id="slot-bet-amount" type="number" min="100" step="100" placeholder="₱ Bet"
+                        class="casino-bet-input">
+                    <div style="display:flex;gap:6px;">
+                        <button class="quick-bet-btn" onclick="setCasinoBet('slot-bet-amount',100)">₱100</button>
+                        <button class="quick-bet-btn" onclick="setCasinoBet('slot-bet-amount',500)">₱500</button>
+                        <button class="quick-bet-btn" onclick="setCasinoBet('slot-bet-amount',1000)">₱1K</button>
+                    </div>
+                </div>
+
+                <button id="slot-spin-btn" onclick="spinSlots()"
+                    style="width:100%;max-width:280px;padding:15px;background:linear-gradient(135deg,#ffd700,#b8860b);color:#0a0a0f;border:none;border-radius:10px;font-weight:800;font-size:1rem;cursor:pointer;letter-spacing:2px;"
+                    class="casino-btn">
+                    🎰 SPIN!
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // ── SPLASH SCREEN ──
@@ -3436,18 +3627,6 @@
             ctx.closePath();
         }
 
-        // ── MOBILE NAV ──
-        window.mobileNav = function (sectionId, tableName, btn) {
-            // Update active state on bottom nav
-            document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
-            if (btn) btn.classList.add('active');
-            // Call the main nav function
-            window.nav(sectionId, tableName);
-        };
-
-        // Sync mobile nav active state when desktop nav is clicked
-        const _origNav = window.nav;
-
         // ── LOGOUT ──
         window.handleLogout = function () { document.body.style.opacity = '0'; setTimeout(() => { window.location.href = 'index.html'; }, 500); };
 
@@ -3501,7 +3680,7 @@
                 loadPredictions();
                 return;
             } else if (tableName === 'Casino') {
-                document.getElementById('casino-page').style.display = 'block';
+                window.openCasino();
                 return;
             } else {
                 document.getElementById('dynamic-page').style.display = 'block';
@@ -3901,6 +4080,441 @@
                 } catch (e) { }
             }
         }
+
+
+        // ═══════════════════════════════════════════════════════
+        //  WINTER CASINO — GAME ENGINE
+        // ═══════════════════════════════════════════════════════
+
+        // ── AUDIO ENGINE (Web Audio API — no external files needed) ──
+        const CasinoAudio = {
+            ctx: null,
+            init() {
+                if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            },
+            tone(freq, dur, type, vol, delay) {
+                this.init();
+                const o = this.ctx.createOscillator();
+                const g = this.ctx.createGain();
+                o.connect(g); g.connect(this.ctx.destination);
+                o.type = type || 'sine';
+                o.frequency.setValueAtTime(freq, this.ctx.currentTime + (delay || 0));
+                g.gain.setValueAtTime(vol || 0.3, this.ctx.currentTime + (delay || 0));
+                g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + (delay || 0) + dur);
+                o.start(this.ctx.currentTime + (delay || 0));
+                o.stop(this.ctx.currentTime + (delay || 0) + dur);
+            },
+            win() {
+                // Festive fanfare
+                [[523, 0], [659, 0.15], [784, 0.3], [1047, 0.45], [784, 0.6], [1047, 0.75], [1319, 0.9]].forEach(([f, d]) => this.tone(f, 0.2, 'square', 0.2, d));
+            },
+            jackpot() {
+                // Big jackpot celebration
+                const notes = [523, 659, 784, 1047, 1319, 1047, 784, 1047, 1319, 1568];
+                notes.forEach((f, i) => this.tone(f, 0.25, 'square', 0.25, i * 0.12));
+                setTimeout(() => this.win(), 1300);
+            },
+            lose() {
+                // Mario death: da-da-da-daaaaa
+                [[392, 0], [370, 0.18], [349, 0.36], [185, 0.54], [196, 0.8], [185, 0.98], [175, 1.16]].forEach(([f, d]) => this.tone(f, 0.25, 'sawtooth', 0.3, d));
+            },
+            click() { this.tone(800, 0.05, 'sine', 0.1); },
+            deal() {
+                this.tone(400, 0.08, 'sine', 0.15, 0);
+                this.tone(600, 0.08, 'sine', 0.15, 0.1);
+            },
+            flip() {
+                [800, 1200, 1600, 1200, 800].forEach((f, i) => this.tone(f, 0.06, 'sine', 0.15, i * 0.08));
+            },
+            spin() { this.tone(300, 0.05, 'sawtooth', 0.1); }
+        };
+
+        // ── CONFETTI ENGINE ──
+        function launchConfetti(duration) {
+            const canvas = document.getElementById('casino-confetti');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const pieces = Array.from({ length: 150 }, () => ({
+                x: Math.random() * canvas.width,
+                y: Math.random() * -200,
+                w: Math.random() * 10 + 5,
+                h: Math.random() * 6 + 4,
+                r: Math.random() * Math.PI * 2,
+                vx: (Math.random() - 0.5) * 6,
+                vy: Math.random() * 4 + 2,
+                vr: (Math.random() - 0.5) * 0.2,
+                color: ['#ffd700', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7', '#dda0dd', '#98fb98'][Math.floor(Math.random() * 8)]
+            }));
+            let start = Date.now();
+            function draw() {
+                if (Date.now() - start > duration) { ctx.clearRect(0, 0, canvas.width, canvas.height); return; }
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                pieces.forEach(p => {
+                    p.x += p.vx; p.y += p.vy; p.r += p.vr; p.vy += 0.05;
+                    if (p.y > canvas.height) { p.y = -20; p.x = Math.random() * canvas.width; p.vy = Math.random() * 3 + 2; }
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.r);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+                    ctx.restore();
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        // ── CASINO STATE ──
+        let casinoActive = false;
+        let bacBetSide = null;
+        let coinSide = null;
+
+        // ── OPEN/CLOSE CASINO ──
+        window.openCasino = function () {
+            document.getElementById('casino-overlay').style.display = 'block';
+            document.getElementById('casino-balance-display').innerText = '₱ ' + currentBalance.toLocaleString('en-PH');
+            casinoActive = true;
+            CasinoAudio.init();
+        };
+
+        window.exitCasino = function () {
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:6000;display:flex;align-items:center;justify-content:center;';
+            modal.innerHTML = `
+                <div style="background:#0b1120;border:1px solid rgba(255,215,0,0.3);border-radius:16px;padding:36px;text-align:center;max-width:360px;">
+                    <div style="font-size:2.5rem;margin-bottom:12px;">🎰</div>
+                    <div style="font-family:'JetBrains Mono',monospace;font-weight:800;color:#ffd700;font-size:1.1rem;margin-bottom:8px;">CASH OUT?</div>
+                    <div style="color:#94a3b8;font-size:0.88rem;margin-bottom:24px;line-height:1.5;">Your balance has been updated.<br>Are you sure you want to leave?</div>
+                    <div style="display:flex;gap:12px;justify-content:center;">
+                        <button onclick="this.closest('[style*=fixed]').remove();document.getElementById('casino-overlay').style.display='none';casinoActive=false;"
+                            style="padding:12px 28px;background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.4);color:#ffd700;border-radius:8px;cursor:pointer;font-weight:700;">
+                            ✓ Cash Out
+                        </button>
+                        <button onclick="this.closest('[style*=fixed]').remove()"
+                            style="padding:12px 28px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#94a3b8;border-radius:8px;cursor:pointer;font-weight:700;">
+                            Keep Playing
+                        </button>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+        };
+
+        // ── RESULT FLASH ──
+        function showCasinoResult(emoji, text, amount, color, duration) {
+            const msg = document.getElementById('casino-result-msg');
+            const inner = document.getElementById('casino-result-inner');
+            document.getElementById('casino-result-emoji').innerText = emoji;
+            document.getElementById('casino-result-text').innerText = text;
+            document.getElementById('casino-result-text').style.color = color;
+            document.getElementById('casino-result-amount').innerText = amount;
+            document.getElementById('casino-result-amount').style.color = color;
+            inner.style.animation = 'none';
+            msg.style.display = 'flex';
+            void inner.offsetWidth;
+            inner.style.animation = 'casinoResultPop 0.4s cubic-bezier(0.34,1.56,0.64,1)';
+            setTimeout(() => { msg.style.display = 'none'; }, duration || 2500);
+        }
+
+        function casinoShake() {
+            const overlay = document.getElementById('casino-overlay');
+            overlay.style.animation = 'screenShake 0.5s ease';
+            setTimeout(() => { overlay.style.animation = ''; }, 500);
+        }
+
+        function updateCasinoBalance() {
+            document.getElementById('casino-balance-display').innerText = '₱ ' + currentBalance.toLocaleString('en-PH');
+        }
+
+        // ── HELPERS ──
+        window.setCasinoBet = function (inputId, amount) {
+            document.getElementById(inputId).value = amount;
+            CasinoAudio.click();
+        };
+        window.switchCasinoGame = function (game) {
+            ['baccarat', 'coinflip', 'slots'].forEach(g => {
+                document.getElementById('cgame-' + g).style.display = g === game ? 'flex' : 'none';
+                document.getElementById('ctab-' + g).classList.toggle('active-ctab', g === game);
+            });
+            CasinoAudio.click();
+        };
+
+        // ═══════════════════════════════════════════════════════
+        //  BACCARAT
+        // ═══════════════════════════════════════════════════════
+        const DECK = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+        const SUITS = ['♠', '♥', '♦', '♣'];
+        function drawCard() {
+            return {
+                rank: DECK[Math.floor(Math.random() * 13)],
+                suit: SUITS[Math.floor(Math.random() * 4)],
+                isRed() { return this.suit === '♥' || this.suit === '♦'; }
+            };
+        }
+        function cardValue(card) {
+            if (['10', 'J', 'Q', 'K'].includes(card.rank)) return 0;
+            if (card.rank === 'A') return 1;
+            return parseInt(card.rank);
+        }
+        function handValue(cards) {
+            return cards.reduce((s, c) => (s + cardValue(c)) % 10, 0);
+        }
+        function cardHTML(card, revealed) {
+            if (!revealed) return '<div class="casino-card card-back"></div>';
+            const cl = card.isRed() ? 'card-red' : '';
+            return '<div class="casino-card ' + cl + '" style="flex-direction:column;font-size:1rem;padding:6px;">' +
+                '<div>' + card.rank + '</div>' +
+                '<div style="font-size:1.4rem;">' + card.suit + '</div>' +
+                '</div>';
+        }
+
+        window.setBacBet = function (side) {
+            bacBetSide = side;
+            ['player', 'tie', 'banker'].forEach(s => {
+                const btn = document.getElementById('bac-btn-' + s);
+                btn.classList.remove('bac-selected');
+                btn.style.borderWidth = '2px';
+            });
+            const btn = document.getElementById('bac-btn-' + side);
+            btn.classList.add('bac-selected');
+            btn.style.borderWidth = '3px';
+            const labels = { player: 'PLAYER · 2x', tie: 'TIE · 8x', banker: 'BANKER · 1.95x' };
+            document.getElementById('bac-selected-display').innerText = '✓ Betting on ' + labels[side];
+            CasinoAudio.click();
+        };
+
+        window.dealBaccarat = async function () {
+            if (!bacBetSide) { showToast('Select Player, Tie, or Banker first!', 2000); return; }
+            const amount = parseFloat(document.getElementById('bac-bet-amount').value);
+            if (!amount || amount < 100) { showToast('Minimum bet is ₱100', 2000); return; }
+            const btn = document.getElementById('bac-deal-btn');
+            btn.disabled = true; btn.innerText = 'Dealing...';
+
+            const ok = await deductBalance(amount, 'Casino: Baccarat (' + bacBetSide + ')', 1.9, 'Casino');
+            if (!ok) { btn.disabled = false; btn.innerText = '🃏 DEAL'; return; }
+            updateCasinoBalance();
+
+            // Deal cards
+            const pCards = [drawCard(), drawCard()];
+            const bCards = [drawCard(), drawCard()];
+            CasinoAudio.deal();
+
+            // Show card backs first
+            document.getElementById('bac-player-cards').innerHTML = cardHTML(null, false) + cardHTML(null, false);
+            document.getElementById('bac-banker-cards').innerHTML = cardHTML(null, false) + cardHTML(null, false);
+            document.getElementById('bac-player-score').innerText = '-';
+            document.getElementById('bac-banker-score').innerText = '-';
+
+            await new Promise(r => setTimeout(r, 600));
+
+            // Reveal player cards
+            document.getElementById('bac-player-cards').innerHTML = cardHTML(pCards[0], true) + cardHTML(pCards[1], true);
+            const pScore = handValue(pCards);
+            document.getElementById('bac-player-score').innerText = pScore;
+            CasinoAudio.deal();
+
+            await new Promise(r => setTimeout(r, 600));
+
+            // Reveal banker cards
+            document.getElementById('bac-banker-cards').innerHTML = cardHTML(bCards[0], true) + cardHTML(bCards[1], true);
+            const bScore = handValue(bCards);
+            document.getElementById('bac-banker-score').innerText = bScore;
+            CasinoAudio.deal();
+
+            // Third card rules (simplified)
+            if (pScore <= 5) {
+                await new Promise(r => setTimeout(r, 400));
+                const p3 = drawCard();
+                pCards.push(p3);
+                document.getElementById('bac-player-cards').innerHTML += cardHTML(p3, true);
+                const newP = handValue(pCards);
+                document.getElementById('bac-player-score').innerText = newP;
+                CasinoAudio.deal();
+            }
+            if (bScore <= 5) {
+                await new Promise(r => setTimeout(r, 400));
+                const b3 = drawCard();
+                bCards.push(b3);
+                document.getElementById('bac-banker-cards').innerHTML += cardHTML(b3, true);
+                const newB = handValue(bCards);
+                document.getElementById('bac-banker-score').innerText = newB;
+                CasinoAudio.deal();
+            }
+
+            await new Promise(r => setTimeout(r, 800));
+
+            const finalP = handValue(pCards);
+            const finalB = handValue(bCards);
+            let outcome = finalP > finalB ? 'player' : finalB > finalP ? 'banker' : 'tie';
+            const payouts = { player: 2, banker: 1.95, tie: 8 };
+            const win = outcome === bacBetSide;
+            const isTieBet = bacBetSide === 'tie' && outcome === 'tie';
+
+            if (win || isTieBet) {
+                const payout = Math.round(amount * payouts[bacBetSide]);
+                await addWinnings(payout, 'Casino Win: Baccarat');
+                updateCasinoBalance();
+                if (bacBetSide === 'tie') {
+                    CasinoAudio.jackpot();
+                    launchConfetti(4000);
+                    showCasinoResult('🎊', 'TIE!', '₱' + payout.toLocaleString('en-PH') + ' WON!', '#10b981', 3000);
+                } else {
+                    CasinoAudio.win();
+                    launchConfetti(3000);
+                    showCasinoResult('🏆', 'YOU WIN!', '₱' + payout.toLocaleString('en-PH') + ' WON!', '#ffd700', 2500);
+                }
+            } else {
+                CasinoAudio.lose();
+                casinoShake();
+                showCasinoResult('💀', 'HOUSE WINS', '₱' + amount.toLocaleString('en-PH') + ' LOST', '#ef4444', 2500);
+            }
+
+            btn.disabled = false; btn.innerText = '🃏 DEAL';
+        };
+
+        // ═══════════════════════════════════════════════════════
+        //  COIN FLIP
+        // ═══════════════════════════════════════════════════════
+        window.setCoinSide = function (side) {
+            coinSide = side;
+            ['heads', 'tails'].forEach(s => {
+                const btn = document.getElementById('coin-btn-' + s);
+                btn.classList.remove('coin-selected');
+                btn.style.borderWidth = '2px';
+            });
+            document.getElementById('coin-btn-' + side).classList.add('coin-selected');
+            document.getElementById('coin-btn-' + side).style.borderWidth = '3px';
+            document.getElementById('coin-result-text').innerText = '✓ You picked ' + side.toUpperCase();
+            CasinoAudio.click();
+        };
+
+        window.flipCoin = async function () {
+            if (!coinSide) { showToast('Pick Heads or Tails first!', 2000); return; }
+            const amount = parseFloat(document.getElementById('coin-bet-amount').value);
+            if (!amount || amount < 100) { showToast('Minimum bet is ₱100', 2000); return; }
+            const btn = document.getElementById('coin-flip-btn');
+            btn.disabled = true; btn.innerText = 'Flipping...';
+
+            const ok = await deductBalance(amount, 'Casino: Coin Flip (' + coinSide + ')', 2, 'Casino');
+            if (!ok) { btn.disabled = false; btn.innerText = '🪙 FLIP!'; return; }
+            updateCasinoBalance();
+
+            // Animate coin
+            const coin = document.getElementById('coin-el');
+            CasinoAudio.flip();
+            coin.classList.add('flipping');
+            coin.innerText = '🪙';
+            document.getElementById('coin-result-text').innerText = 'Flipping...';
+
+            await new Promise(r => setTimeout(r, 900));
+            coin.classList.remove('flipping');
+
+            const result = Math.random() < 0.5 ? 'heads' : 'tails';
+            coin.innerText = result === 'heads' ? '😊' : '🦅';
+            document.getElementById('coin-result-text').innerText = result.toUpperCase() + '!';
+
+            if (result === coinSide) {
+                const payout = amount * 2;
+                await addWinnings(payout, 'Casino Win: Coin Flip');
+                updateCasinoBalance();
+                CasinoAudio.win();
+                launchConfetti(2500);
+                showCasinoResult('🪙', result.toUpperCase() + '!', '₱' + payout.toLocaleString('en-PH') + ' WON!', '#ffd700', 2500);
+            } else {
+                CasinoAudio.lose();
+                casinoShake();
+                showCasinoResult('💀', result.toUpperCase() + '!', '₱' + amount.toLocaleString('en-PH') + ' LOST', '#ef4444', 2500);
+            }
+
+            btn.disabled = false; btn.innerText = '🪙 FLIP!';
+        };
+
+        // ═══════════════════════════════════════════════════════
+        //  SLOT MACHINE
+        // ═══════════════════════════════════════════════════════
+        const SLOT_SYMBOLS = ['7️⃣', '⭐', '🔔', '🍋', '🍒', '💎', '🎯', '🃏'];
+        const SLOT_PAYOUTS = {
+            '7️⃣7️⃣7️⃣': 50, '💎💎💎': 30, '⭐⭐⭐': 20, '🔔🔔🔔': 10,
+            '🍋🍋🍋': 8, '🍒🍒🍒': 5, '🎯🎯🎯': 6, '🃏🃏🃏': 4
+        };
+
+        function getSlotMultiplier(reels) {
+            const key = reels.join('');
+            if (SLOT_PAYOUTS[key]) return SLOT_PAYOUTS[key];
+            // Any pair
+            if (reels[0] === reels[1] || reels[1] === reels[2] || reels[0] === reels[2]) return 1.5;
+            return 0;
+        }
+
+        window.spinSlots = async function () {
+            const amount = parseFloat(document.getElementById('slot-bet-amount').value);
+            if (!amount || amount < 100) { showToast('Minimum bet is ₱100', 2000); return; }
+            const btn = document.getElementById('slot-spin-btn');
+            btn.disabled = true; btn.innerText = 'Spinning...';
+
+            const ok = await deductBalance(amount, 'Casino: Slots', 1, 'Casino');
+            if (!ok) { btn.disabled = false; btn.innerText = '🎰 SPIN!'; return; }
+            updateCasinoBalance();
+
+            // Spin animation
+            const reelEls = [0, 1, 2].map(i => document.getElementById('slot-' + i));
+            reelEls.forEach(r => { r.classList.add('spinning'); r.classList.remove('winner'); });
+
+            // Spinning sound
+            let spinInterval = setInterval(() => CasinoAudio.spin(), 100);
+
+            // Animate spinning symbols
+            let spinCount = 0;
+            const spinAnim = setInterval(() => {
+                reelEls.forEach(r => {
+                    r.innerText = SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)];
+                });
+                spinCount++;
+            }, 80);
+
+            // Determine results (house edge: slightly weighted)
+            const result = [0, 1, 2].map(() => SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)]);
+
+            // Reveal reels one by one
+            await new Promise(r => setTimeout(r, 800));
+            clearInterval(spinAnim); clearInterval(spinInterval);
+
+            for (let i = 0; i < 3; i++) {
+                reelEls[i].classList.remove('spinning');
+                reelEls[i].innerText = result[i];
+                CasinoAudio.deal();
+                await new Promise(r => setTimeout(r, 300));
+            }
+
+            await new Promise(r => setTimeout(r, 400));
+
+            const mult = getSlotMultiplier(result);
+            if (mult > 0) {
+                const payout = Math.round(amount * mult);
+                await addWinnings(payout, 'Casino Win: Slots x' + mult);
+                updateCasinoBalance();
+                reelEls.forEach(r => r.classList.add('winner'));
+                if (mult >= 20) {
+                    CasinoAudio.jackpot();
+                    launchConfetti(5000);
+                    showCasinoResult('🎰', 'JACKPOT!!!', '₱' + payout.toLocaleString('en-PH') + ' · ' + mult + 'x', '#ffd700', 4000);
+                } else {
+                    CasinoAudio.win();
+                    launchConfetti(2500);
+                    showCasinoResult('🏆', mult + 'x WIN!', '₱' + payout.toLocaleString('en-PH') + ' WON!', '#10b981', 2500);
+                }
+            } else {
+                CasinoAudio.lose();
+                casinoShake();
+                showCasinoResult('💀', 'NO MATCH', '₱' + amount.toLocaleString('en-PH') + ' LOST', '#ef4444', 2000);
+            }
+
+            btn.disabled = false; btn.innerText = '🎰 SPIN!';
+        };
+
+        // ── WIRE CASINO TAB NAV ──
+        // Override casino nav to open overlay instead of page
 
         // ── INIT ──
         // Restore last visited tab
