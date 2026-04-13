@@ -405,14 +405,23 @@
                 display: none;
             }
 
+            /* Payment logos move below login form on mobile */
             .payment-bar {
-                top: 12px;
-                right: 12px;
-                gap: 12px;
+                position: static;
+                justify-content: center;
+                margin-top: 20px;
+                gap: 18px;
+                padding: 0 20px;
             }
 
             .payment-bar img {
-                height: 14px;
+                height: 16px;
+                opacity: 0.5;
+            }
+
+            /* Show QR button on mobile */
+            .qr-mobile-btn {
+                display: block !important;
             }
 
             .btn-login {
@@ -430,7 +439,7 @@
 
 <body>
 
-    <div class="payment-bar">
+    <div class="payment-bar" id="payment-bar-desktop">
         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/2560px-Visa_Inc._logo.svg.png"
             alt="Visa">
         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/1280px-Mastercard-logo.svg.png"
@@ -439,6 +448,36 @@
             alt="PayPal">
         <img src="https://cdn.prod.website-files.com/6271c4bfa6c2e361254394df/6274a12361b7e411b93198de_Paymongo_logo.svg"
             alt="PayMongo">
+    </div>
+
+    <!-- QR MODAL (mobile) -->
+    <div id="qr-modal"
+        style="display:none;position:fixed;inset:0;background:rgba(2,6,23,0.95);z-index:9000;overflow-y:auto;justify-content:center;align-items:flex-start;padding:40px 20px;"
+        onclick="if(event.target===this)closeQrModal()">
+        <div
+            style="background:#0b1628;border:1px solid rgba(56,189,248,0.3);border-radius:16px;padding:36px 28px;max-width:320px;width:100%;margin:auto;text-align:center;position:relative;">
+            <button onclick="closeQrModal()"
+                style="position:absolute;top:14px;right:16px;background:none;border:none;color:#94a3b8;font-size:1.4rem;cursor:pointer;">×</button>
+            <div
+                style="font-size:1rem;font-weight:700;color:#38bdf8;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">
+                📱 Download App</div>
+            <p style="color:#94a3b8;font-size:0.82rem;margin:0 0 20px 0;">Scan with your camera to download the Winter
+                Analytics native app</p>
+            <div style="background:white;border-radius:12px;padding:12px;display:inline-block;margin-bottom:18px;">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://winteranalytics.com/download"
+                    alt="Download QR" style="width:200px;height:200px;display:block;">
+            </div>
+            <div
+                style="display:flex;align-items:center;justify-content:center;gap:10px;color:#64748b;font-size:0.78rem;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Apple_logo_black.svg/512px-Apple_logo_black.svg.png"
+                    alt="Apple" style="height:16px;filter:brightness(0) invert(0.4);">
+                <span>iOS</span>
+                <span style="color:#334155;">·</span>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Android_robot.svg/512px-Android_robot.svg.png"
+                    alt="Android" style="height:18px;opacity:0.4;">
+                <span>Android</span>
+            </div>
+        </div>
     </div>
 
     <div class="video-section">
@@ -475,6 +514,23 @@
                 </form>
 
                 <a href="https://ocr.brubai.net/" class="register-link">No account yet? <span>Register Here</span></a>
+
+                <!-- Mobile: QR button + payment logos -->
+                <button class="qr-mobile-btn" onclick="openQrModal()"
+                    style="display:none;width:100%;margin-top:14px;padding:11px;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.25);color:#38bdf8;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;letter-spacing:1px;">📱
+                    Scan to Download App</button>
+
+                <div class="payment-bar" id="payment-bar-mobile"
+                    style="display:none;position:static;justify-content:center;margin-top:18px;gap:18px;padding:0;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/2560px-Visa_Inc._logo.svg.png"
+                        alt="Visa" style="height:16px;filter:brightness(0) invert(1);opacity:0.45;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/1280px-Mastercard-logo.svg.png"
+                        alt="Mastercard" style="height:16px;filter:brightness(0) invert(1);opacity:0.45;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/PayPal.svg/2560px-PayPal.svg.png"
+                        alt="PayPal" style="height:16px;filter:brightness(0) invert(1);opacity:0.45;">
+                    <img src="https://cdn.prod.website-files.com/6271c4bfa6c2e361254394df/6274a12361b7e411b93198de_Paymongo_logo.svg"
+                        alt="PayMongo" style="height:16px;filter:brightness(0) invert(1);opacity:0.45;">
+                </div>
             </div>
 
             <div class="glass-box app-box">
@@ -521,6 +577,27 @@
                 document.getElementById('password').value = '';
             }
         }
+
+        function openQrModal() {
+            const m = document.getElementById('qr-modal');
+            m.style.display = 'flex';
+        }
+        function closeQrModal() {
+            document.getElementById('qr-modal').style.display = 'none';
+        }
+
+        // Show mobile-specific elements on small screens
+        function checkMobile() {
+            const isMobile = window.innerWidth <= 600;
+            const qrBtn = document.querySelector('.qr-mobile-btn');
+            const mobileBar = document.getElementById('payment-bar-mobile');
+            const desktopBar = document.getElementById('payment-bar-desktop');
+            if (qrBtn) qrBtn.style.display = isMobile ? 'block' : 'none';
+            if (mobileBar) mobileBar.style.display = isMobile ? 'flex' : 'none';
+            if (desktopBar) desktopBar.style.display = isMobile ? 'none' : 'flex';
+        }
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
     </script>
 </body>
 
