@@ -3282,6 +3282,17 @@
         }
 
 
+        function updatePredictPayout(recordId) {
+            const bet = window._predictBets[recordId];
+            if (!bet) return;
+            const amountEl = document.getElementById('pslip-amount-' + recordId);
+            const payoutEl = document.getElementById('pslip-payout-' + recordId);
+            if (!amountEl || !payoutEl) return;
+            const amount = parseFloat(amountEl.value) || 0;
+            const payout = Math.round(amount * parseFloat(bet.odds));
+            payoutEl.innerText = payout > 0 ? '₱' + payout.toLocaleString('en-PH') : '₱0';
+        }
+
         async function confirmPredictBet(recordId, question) {
             const bet = window._predictBets[recordId];
             if (!bet) return;
